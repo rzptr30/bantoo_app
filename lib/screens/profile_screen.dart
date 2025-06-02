@@ -51,15 +51,8 @@ class ProfileScreen extends StatelessWidget {
       },
     ];
 
-    return Scaffold(
-      backgroundColor: Color(0xFFEFF3F6),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF222E3A),
-        elevation: 0,
-        title: Text("Profile", style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Column(
+    return SingleChildScrollView(
+      child: Column(
         children: [
           SizedBox(height: 32),
           CircleAvatar(
@@ -88,22 +81,6 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           )),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
-        backgroundColor: Color(0xFF222E3A),
-        selectedItemColor: Color(0xFF222E3A),
-        unselectedItemColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          // Implement navigation to other tabs if needed
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Volunteer"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notification"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );

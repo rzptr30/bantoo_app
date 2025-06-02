@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../db/user_database.dart';
+import '../models/user.dart';
 
 class UserInfoScreen extends StatefulWidget {
   final String username;
@@ -23,13 +25,61 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   late TextEditingController _phoneController;
   String _country = 'Indonesia';
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
+    // Inisialisasi dengan data awal
     _usernameController = TextEditingController(text: widget.username);
     _emailController = TextEditingController(text: widget.email);
-    _passwordController = TextEditingController(text: '********');
-    _phoneController = TextEditingController(text: '081********48');
+    _passwordController = TextEditingController(text: '');
+    _phoneController = TextEditingController(text: '');
+    // TODO: ambil data phone, country, password dari db kalau sudah ada.
+    _loadUserDetails();
+  }
+
+  Future<void> _loadUserDetails() async {
+    setState(() => _isLoading = true);
+    final user = await UserDatabase.instance.getUserByUsername(widget.username);
+    if (user != null) {
+      _usernameController.text = user.username;
+      _emailController.text = user.email;
+      _passwordController.text = user.password;
+      _phoneController.text = user.phone ?? '';
+      _country = user.country ?? 'Indonesia';
+      setState(() {}); // Update tampilan
+    }
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _saveChanges() async {
+    setState(() => _isLoading = true);
+
+    // Validasi sederhana
+    if (_usernameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Semua field harus diisi!")),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // Update ke database
+    final user = User(
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      phone: _phoneController.text.trim(),
+      country: _country,
+    );
+    await UserDatabase.instance.updateUser(user);
+
+    setState(() => _isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Data berhasil disimpan!")),
+    );
+    Navigator.pop(context); // Kembali ke halaman sebelumnya (Profile)
   }
 
   @override
@@ -46,161 +96,107 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Center(
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(24),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 44,
-                    child: Stack(
+                  Center(
+                    child: Column(
                       children: [
-                        Image.asset(widget.avatarAsset, width: 72),
-                        Positioned(
-                          right: 0, bottom: 0,
-                          child: CircleAvatar(
-                            radius: 13,
-                            backgroundColor: Colors.white,
-                            child: Icon(Icons.edit, size: 16, color: Colors.grey),
+                        CircleAvatar(
+                          backgroundColor: Colors.white,
+                          radius: 44,
+                          child: Stack(
+                            children: [
+                              Image.asset(widget.avatarAsset, width: 72),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: CircleAvatar(
+                                  radius: 13,
+                                  backgroundColor: Colors.white,
+                                  child: Icon(Icons.edit, size: 16, color: Colors.grey),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        SizedBox(height: 12),
+                        Text(
+                          "Hi! ${_usernameController.text}",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF183B56)),
+                        ),
+                        SizedBox(height: 2),
+                        Text("Bantoo's Guardian Angel", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                       ],
                     ),
                   ),
-                  SizedBox(height: 12),
-                  Text(
-                    "Hi! ${widget.username}",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF183B56)),
+                  SizedBox(height: 24),
+                  TextField(
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      labelText: "Username",
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                  SizedBox(height: 2),
-                  Text("Bantoo's Guardian Angel", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-                ],
-              ),
-            ),
-            SizedBox(height: 24),
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: "Username",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                  SizedBox(height: 16),
+                  TextField(
                     controller: _emailController,
-                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: "Email Address",
                       border: OutlineInputBorder(),
                     ),
                   ),
-                ),
-                SizedBox(width: 8),
-                TextButton(
-                  child: Text("Change Email Address"),
-                  onPressed: () {
-                    // Implement change email logic
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                  SizedBox(height: 16),
+                  TextField(
                     controller: _passwordController,
                     obscureText: true,
-                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: "Password",
                       border: OutlineInputBorder(),
                     ),
                   ),
-                ),
-                SizedBox(width: 8),
-                TextButton(
-                  child: Text("Change Password"),
-                  onPressed: () {
-                    // Implement change password logic
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                  SizedBox(height: 16),
+                  TextField(
                     controller: _phoneController,
-                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: "Phone Number",
                       border: OutlineInputBorder(),
                     ),
+                    keyboardType: TextInputType.phone,
                   ),
-                ),
-                SizedBox(width: 8),
-                TextButton(
-                  child: Text("Change Phone Number"),
-                  onPressed: () {
-                    // Implement change phone logic
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _country,
-              items: ['Indonesia', 'Malaysia', 'Singapore', 'Thailand']
-                  .map((c) => DropdownMenuItem(child: Text(c), value: c))
-                  .toList(),
-              onChanged: (val) => setState(() => _country = val!),
-              decoration: InputDecoration(
-                labelText: "Country",
-                border: OutlineInputBorder(),
+                  SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _country,
+                    items: ['Indonesia', 'Malaysia', 'Singapore', 'Thailand']
+                        .map((c) => DropdownMenuItem(child: Text(c), value: c))
+                        .toList(),
+                    onChanged: (val) => setState(() => _country = val!),
+                    decoration: InputDecoration(
+                      labelText: "Country",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveChanges,
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text("Save Changes"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF222E3A),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                // Implement save logic
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Saved!")),
-                );
-              },
-              child: Text("Save Changes"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF222E3A),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
-        backgroundColor: Color(0xFF222E3A),
-        selectedItemColor: Color(0xFF222E3A),
-        unselectedItemColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          // Implement navigation to other tabs if needed
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Volunteer"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notification"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
     );
   }
 }

@@ -18,7 +18,7 @@ class UserDatabase {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -27,9 +27,18 @@ class UserDatabase {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL,
       email TEXT NOT NULL,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      phone TEXT,
+      country TEXT
     )
     ''');
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE users ADD COLUMN phone TEXT;');
+      await db.execute('ALTER TABLE users ADD COLUMN country TEXT;');
+    }
   }
 
   Future<int> createUser(User user) async {
@@ -45,12 +54,7 @@ class UserDatabase {
       whereArgs: [email, password],
     );
     if (maps.isNotEmpty) {
-      return User(
-        id: maps.first['id'] as int,
-        username: maps.first['username'] as String,
-        email: maps.first['email'] as String,
-        password: maps.first['password'] as String,
-      );
+      return User.fromMap(maps.first);
     }
     return null;
   }
@@ -63,13 +67,31 @@ class UserDatabase {
       whereArgs: [username],
     );
     if (maps.isNotEmpty) {
-      return User(
-        id: maps.first['id'] as int,
-        username: maps.first['username'] as String,
-        email: maps.first['email'] as String,
-        password: maps.first['password'] as String,
-      );
+      return User.fromMap(maps.first);
     }
     return null;
+  }
+
+  Future<User?> getUserByEmail(String email) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<int> updateUser(User user) async {
+    final db = await instance.database;
+    return await db.update(
+      'users',
+      user.toMap(),
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
   }
 }
