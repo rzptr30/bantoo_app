@@ -7,16 +7,27 @@ class EmergencyBantooSection extends StatefulWidget {
   const EmergencyBantooSection({Key? key}) : super(key: key);
 
   @override
-  State<EmergencyBantooSection> createState() => _EmergencyBantooSectionState();
+  EmergencyBantooSectionState createState() => EmergencyBantooSectionState();
 }
 
-class _EmergencyBantooSectionState extends State<EmergencyBantooSection> {
+class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
   late Future<List<Campaign>> _campaignsFuture;
 
   @override
   void initState() {
     super.initState();
+    _loadCampaigns();
+  }
+
+  void _loadCampaigns() {
     _campaignsFuture = CampaignDatabase.instance.getAllCampaigns();
+  }
+
+  /// Panggil ini setelah tambah campaign untuk refresh tampilan
+  void refreshCampaigns() {
+    setState(() {
+      _loadCampaigns();
+    });
   }
 
   @override
@@ -24,7 +35,19 @@ class _EmergencyBantooSectionState extends State<EmergencyBantooSection> {
     return FutureBuilder<List<Campaign>>(
       future: _campaignsFuture,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text(
+              "Belum ada campaign emergency.\nKlik tombol '+' untuk menambah.",
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
         final campaigns = snapshot.data!;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,9 +56,19 @@ class _EmergencyBantooSectionState extends State<EmergencyBantooSection> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
               child: Row(
                 children: [
-                  Text("Emergency Bantoo!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF183B56))),
+                  Text(
+                    "Emergency Bantoo!",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                      color: Color(0xFF183B56),
+                    ),
+                  ),
                   Spacer(),
-                  TextButton(onPressed: () {}, child: Text("View all"))
+                  TextButton(
+                    onPressed: () {},
+                    child: Text("View all"),
+                  ),
                 ],
               ),
             ),
@@ -46,13 +79,17 @@ class _EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                 itemCount: campaigns.length,
                 itemBuilder: (context, i) {
                   final c = campaigns[i];
-                  final percent = (c.collectedFund / c.targetFund).clamp(0.0, 1.0);
-                  final expired = DateTime.parse(c.endDate);
+                  final percent = (c.targetFund == 0)
+                      ? 0.0
+                      : (c.collectedFund / c.targetFund).clamp(0.0, 1.0);
+                  final expired = DateTime.tryParse(c.endDate);
                   return Container(
                     width: 250,
-                    margin: EdgeInsets.only(left: i == 0 ? 16 : 8, right: 8, bottom: 8),
+                    margin: EdgeInsets.only(
+                        left: i == 0 ? 16 : 8, right: 8, bottom: 8),
                     child: Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
                       elevation: 2,
                       child: Padding(
                         padding: const EdgeInsets.all(10),
@@ -61,11 +98,34 @@ class _EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.file(File(c.imagePath), width: double.infinity, height: 100, fit: BoxFit.cover),
+                              child: c.imagePath.isNotEmpty &&
+                                      File(c.imagePath).existsSync()
+                                  ? Image.file(
+                                      File(c.imagePath),
+                                      width: double.infinity,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      width: double.infinity,
+                                      height: 100,
+                                      color: Colors.grey[300],
+                                      child: Icon(Icons.image, size: 50),
+                                    ),
                             ),
                             SizedBox(height: 10),
-                            Text("Fundraiser", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            Text(c.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                            Text(
+                              "Fundraiser",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            Text(
+                              c.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 17),
+                            ),
                             SizedBox(height: 6),
                             Row(
                               children: [
@@ -87,19 +147,37 @@ class _EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("collected", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-                                    Text("Rp${c.collectedFund.toString()}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                    Text("collected",
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[700])),
+                                    Text(
+                                      "Rp${c.collectedFund.toString()}",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15),
+                                    ),
                                   ],
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text("expired", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-                                    Text("${expired.day.toString().padLeft(2, '0')}/${expired.month.toString().padLeft(2, '0')}/${expired.year}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                    Text("expired",
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[700])),
+                                    Text(
+                                      expired != null
+                                          ? "${expired.day.toString().padLeft(2, '0')}/${expired.month.toString().padLeft(2, '0')}/${expired.year}"
+                                          : "-",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15),
+                                    ),
                                   ],
                                 ),
                               ],
-                            )
+                            ),
                           ],
                         ),
                       ),

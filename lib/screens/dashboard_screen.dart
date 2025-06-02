@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'add_campaign_screen.dart';
+import 'dashboard_emergency_section.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -10,6 +12,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
+
+  // Untuk refresh EmergencyBantooSection setelah tambah campaign
+  final GlobalKey<EmergencyBantooSectionState> _emergencyKey = GlobalKey();
 
   final List<Map<String, dynamic>> _navItems = [
     {"icon": Icons.home, "label": "Home"},
@@ -50,8 +55,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: _selectedIndex == 0
-          ? _DashboardHome(username: widget.username)
+          ? _DashboardHome(
+              username: widget.username,
+              emergencyKey: _emergencyKey,
+            )
           : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton(
+              backgroundColor: Color(0xFF222E3A),
+              child: Icon(Icons.add),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AddCampaignScreen()),
+                );
+                if (result == true) {
+                  // refresh EmergencyBantooSection
+                  _emergencyKey.currentState?.refreshCampaigns();
+                }
+              },
+              tooltip: "Buat Campaign",
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFF222E3A),
         selectedItemColor: Color(0xFF222E3A),
@@ -88,7 +113,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 class _DashboardHome extends StatelessWidget {
   final String username;
-  const _DashboardHome({required this.username});
+  final GlobalKey<EmergencyBantooSectionState> emergencyKey;
+  const _DashboardHome({required this.username, required this.emergencyKey});
 
   @override
   Widget build(BuildContext context) {
@@ -144,15 +170,8 @@ class _DashboardHome extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16),
-          // MOCKUP CONTENT, SILAKAN ISI SESUAI FITUR NANTI
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              "Contoh konten dashboard di sini.\nSilakan tambahkan menu, card, dsb sesuai gambar.",
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ),
+          // Emergency Bantoo Section
+          EmergencyBantooSection(key: emergencyKey),
           SizedBox(height: 36),
         ],
       ),
