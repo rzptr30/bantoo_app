@@ -47,8 +47,8 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
       imagePath: _imageFile!.path,
     );
     await CampaignDatabase.instance.insertCampaign(campaign);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Campaign added!')));
-    Navigator.pop(context, true);
+    ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Campaign added!')));
+    Navigator.pop(this.context, true);
   }
 
   @override
