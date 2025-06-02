@@ -37,12 +37,12 @@ class UserDatabase {
     return await db.insert('users', user.toMap());
   }
 
-  Future<User?> getUser(String usernameOrEmail, String password) async {
+  Future<User?> getUserByEmailAndPassword(String email, String password) async {
     final db = await instance.database;
     final maps = await db.query(
       'users',
-      where: '(username = ? OR email = ?) AND password = ?',
-      whereArgs: [usernameOrEmail, usernameOrEmail, password],
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
     );
     if (maps.isNotEmpty) {
       return User(
@@ -55,8 +55,21 @@ class UserDatabase {
     return null;
   }
 
-  Future close() async {
+  Future<User?> getUserByUsername(String username) async {
     final db = await instance.database;
-    db.close();
+    final maps = await db.query(
+      'users',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+    if (maps.isNotEmpty) {
+      return User(
+        id: maps.first['id'] as int,
+        username: maps.first['username'] as String,
+        email: maps.first['email'] as String,
+        password: maps.first['password'] as String,
+      );
+    }
+    return null;
   }
 }

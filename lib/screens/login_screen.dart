@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../db/user_database.dart';
-import '../models/user.dart';
+import 'dashboard_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -9,20 +9,30 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _controllerUser = TextEditingController();
+  final _controllerEmail = TextEditingController();
   final _controllerPass = TextEditingController();
   String _error = '';
+  bool _isLoading = false;
 
   void _login() async {
-    final user = await UserDatabase.instance.getUser(
-      _controllerUser.text.trim(),
+    setState(() {
+      _error = '';
+      _isLoading = true;
+    });
+    final user = await UserDatabase.instance.getUserByEmailAndPassword(
+      _controllerEmail.text.trim(),
       _controllerPass.text.trim(),
     );
+    setState(() {
+      _isLoading = false;
+    });
     if (user != null) {
-      // TODO: Ganti dengan halaman dashboard nanti
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login Sukses!')));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => DashboardScreen(username: user.username)),
+      );
     } else {
-      setState(() => _error = 'Username/Email atau Password salah');
+      setState(() => _error = 'Email atau Password salah');
     }
   }
 
@@ -33,9 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Image.asset('assets/header_img.png'), // tambahkan gambar header sesuai desain
+            Image.asset('assets/header_img.png'),
             Container(
-              margin: EdgeInsets.only(top: -30),
+              margin: EdgeInsets.only(top: 0),
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -47,9 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text("Sign in to your account", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   SizedBox(height: 24),
                   TextField(
-                    controller: _controllerUser,
+                    controller: _controllerEmail,
                     decoration: InputDecoration(
-                      labelText: "Email or Username",
+                      labelText: "Email",
                       prefixIcon: Icon(Icons.person_outline),
                     ),
                   ),
@@ -70,11 +80,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   if (_error.isNotEmpty)
-                    Text(_error, style: TextStyle(color: Colors.red)),
-                  SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(_error, style: TextStyle(color: Colors.red)),
+                    ),
+                  SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: _login,
-                    child: Text("Log In"),
+                    onPressed: _isLoading ? null : _login,
+                    child: _isLoading
+                        ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text("Log In"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF222E3A),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -87,7 +102,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text("Don't have an account? "),
                       GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterScreen())),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => RegisterScreen()),
+                        ),
                         child: Text("Sign Up", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
                       )
                     ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../db/user_database.dart';
 import '../models/user.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,28 +15,76 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _controllerConfirm = TextEditingController();
   bool _accept = false;
   String _error = '';
+  bool _isLoading = false;
 
   void _register() async {
+    setState(() {
+      _error = '';
+      _isLoading = true;
+    });
+
     if (!_accept) {
-      setState(() => _error = 'Anda harus menyetujui Terms & Conditions');
+      setState(() {
+        _error = 'Anda harus menyetujui Terms & Conditions';
+        _isLoading = false;
+      });
       return;
     }
     if (_controllerPass.text != _controllerConfirm.text) {
-      setState(() => _error = 'Password tidak sama');
+      setState(() {
+        _error = 'Password tidak sama';
+        _isLoading = false;
+      });
       return;
     }
     if (_controllerEmail.text.isEmpty || _controllerUsername.text.isEmpty || _controllerPass.text.isEmpty) {
-      setState(() => _error = 'Semua field harus diisi');
+      setState(() {
+        _error = 'Semua field harus diisi';
+        _isLoading = false;
+      });
       return;
     }
+
+    // Cek username unik
+    final existingUser = await UserDatabase.instance.getUserByUsername(_controllerUsername.text.trim());
+    if (existingUser != null) {
+      setState(() {
+        _error = 'Username sudah terdaftar, silakan gunakan username lain';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Simpan user ke SQLite
     final user = User(
       username: _controllerUsername.text.trim(),
       email: _controllerEmail.text.trim(),
       password: _controllerPass.text.trim(),
     );
     await UserDatabase.instance.createUser(user);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registrasi Sukses! Silakan login.')));
-    Navigator.pop(context);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Tampilkan pop-up sukses dan langsung ke login
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: Text('Sign Up Success'),
+        content: Text('Akun berhasil dibuat. Silakan login!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // tutup dialog
+              Navigator.pop(context); // kembali ke login
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -45,9 +94,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Image.asset('assets/header_img.png'), // gambar sama seperti login
+            Image.asset('assets/header_img.png'),
             Container(
-              margin: EdgeInsets.only(top: -30),
+              margin: EdgeInsets.only(top: 0),
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -104,11 +153,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ],
                   ),
                   if (_error.isNotEmpty)
-                    Text(_error, style: TextStyle(color: Colors.red)),
-                  SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(_error, style: TextStyle(color: Colors.red)),
+                    ),
+                  SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: _register,
-                    child: Text("Sign Up"),
+                    onPressed: _isLoading ? null : _register,
+                    child: _isLoading
+                        ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text("Sign Up"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF222E3A),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
