@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_campaign_screen.dart';
 import 'dashboard_emergency_section.dart';
+import 'profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -59,7 +60,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               username: widget.username,
               emergencyKey: _emergencyKey,
             )
-          : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
+          : _selectedIndex == 3
+              ? ProfileScreen(
+                  username: widget.username,
+                  email: '', // Isi ini dengan email user jika ada
+                )
+              : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               backgroundColor: Color(0xFF222E3A),
