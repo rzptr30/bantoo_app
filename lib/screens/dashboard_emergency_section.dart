@@ -94,6 +94,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                       child: Padding(
                         padding: const EdgeInsets.all(10),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min, // FIX: prevent overflow!
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             ClipRRect(
@@ -103,17 +104,17 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                                   ? Image.file(
                                       File(c.imagePath),
                                       width: double.infinity,
-                                      height: 100,
+                                      height: 80, // FIX: reduce from 100 to 80
                                       fit: BoxFit.cover,
                                     )
                                   : Container(
                                       width: double.infinity,
-                                      height: 100,
+                                      height: 80, // FIX: reduce from 100 to 80
                                       color: Colors.grey[300],
-                                      child: Icon(Icons.image, size: 50),
+                                      child: Icon(Icons.image, size: 40),
                                     ),
                             ),
-                            SizedBox(height: 10),
+                            SizedBox(height: 8), // reduce from 10
                             Text(
                               "Fundraiser",
                               style: TextStyle(
@@ -126,7 +127,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 17),
                             ),
-                            SizedBox(height: 6),
+                            SizedBox(height: 5), // reduce from 6
                             Row(
                               children: [
                                 Expanded(
@@ -140,7 +141,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                                 Text("${(percent * 100).toInt()}%"),
                               ],
                             ),
-                            SizedBox(height: 6),
+                            SizedBox(height: 5), // reduce from 6
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
