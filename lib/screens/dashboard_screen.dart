@@ -11,13 +11,17 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
 
-  // List of navigation items, icon and label
   final List<Map<String, dynamic>> _navItems = [
     {"icon": Icons.home, "label": "Home"},
     {"icon": Icons.favorite, "label": "Volunteer"},
     {"icon": Icons.notifications, "label": "Notification"},
     {"icon": Icons.person, "label": "Profile"},
   ];
+
+  String get _appBarTitle {
+    // Jika di tab Profile, judul "Profile", lainnya "Dashboard"
+    return _selectedIndex == 3 ? "Profile" : "Dashboard";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: Color(0xFFEFF3F6),
         elevation: 0,
         title: Text(
-          "Dashboard",
+          _appBarTitle,
           style: TextStyle(
             color: Color(0xFF183B56),
             fontWeight: FontWeight.bold,
@@ -40,7 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: CircleAvatar(
               radius: 22,
               backgroundColor: Colors.white,
-              child: Image.asset('assets/dashboard_avatar.png', width: 32), // Siapkan asset sesuai desain
+              child: Image.asset('assets/dashboard_avatar.png', width: 32),
             ),
           ),
         ],
