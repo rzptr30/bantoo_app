@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../db/campaign_database.dart';
 import 'user_info_screen.dart';
+import 'login_screen.dart';
+import 'admin_campaign_approval_screen.dart';
+import 'user_campaign_archive_screen.dart'; // Tambah ini
 
 class ProfileScreen extends StatefulWidget {
   final String username;
   final String email;
   final String avatarAsset;
   final String tagline;
+  final String role;
 
   const ProfileScreen({
     Key? key,
@@ -14,6 +19,7 @@ class ProfileScreen extends StatefulWidget {
     required this.email,
     this.avatarAsset = 'assets/profile_avatar.png',
     this.tagline = "Bantoo's Guardian Angel",
+    required this.role,
   }) : super(key: key);
 
   @override
@@ -24,6 +30,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final menus = [
+      if (widget.role == "admin")
+        {
+          'icon': Icons.admin_panel_settings,
+          'label': 'ACC Campaign (Admin)',
+          'onTap': () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => AdminCampaignApprovalScreen()),
+            );
+          },
+        },
+      {
+        'icon': Icons.archive,
+        'label': 'Arsip Campaign Saya',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => UserCampaignArchiveScreen(username: widget.username)),
+          );
+        },
+      },
       {
         'icon': Icons.person,
         'label': 'User Information',
@@ -55,7 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'label': 'Setting',
         'onTap': () {},
       },
-      // Menu reset database donasi
       {
         'icon': Icons.delete_forever,
         'label': 'Reset Database Donasi',
@@ -88,6 +114,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             }
           }
+        },
+      },
+      {
+        'icon': Icons.logout,
+        'label': 'Logout',
+        'onTap': () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => LoginScreen()),
+            (route) => false,
+          );
         },
       },
     ];

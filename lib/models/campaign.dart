@@ -6,6 +6,8 @@ class Campaign {
   int collectedFund;
   String endDate;
   String imagePath;
+  String status;    // pending, approved, rejected
+  String creator;   // username/email pembuat campaign
 
   Campaign({
     this.id,
@@ -15,6 +17,8 @@ class Campaign {
     required this.collectedFund,
     required this.endDate,
     required this.imagePath,
+    required this.status,
+    required this.creator,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +30,8 @@ class Campaign {
       'collectedFund': collectedFund,
       'endDate': endDate,
       'imagePath': imagePath,
+      'status': status,
+      'creator': creator,
     };
   }
 
@@ -38,6 +44,8 @@ class Campaign {
       collectedFund: map['collectedFund'],
       endDate: map['endDate'],
       imagePath: map['imagePath'],
+      status: map['status'] ?? 'pending',
+      creator: map['creator'] ?? '',
     );
   }
 }

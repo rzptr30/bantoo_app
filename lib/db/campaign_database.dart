@@ -18,7 +18,7 @@ class CampaignDatabase {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -30,9 +30,18 @@ class CampaignDatabase {
         targetFund INTEGER NOT NULL,
         collectedFund INTEGER NOT NULL,
         endDate TEXT NOT NULL,
-        imagePath TEXT NOT NULL
+        imagePath TEXT NOT NULL,
+        status TEXT NOT NULL,
+        creator TEXT NOT NULL
       )
     ''');
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE campaigns ADD COLUMN status TEXT NOT NULL DEFAULT "pending";');
+      await db.execute('ALTER TABLE campaigns ADD COLUMN creator TEXT NOT NULL DEFAULT "";');
+    }
   }
 
   Future<int> insertCampaign(Campaign campaign) async {
@@ -46,7 +55,37 @@ class CampaignDatabase {
     return result.map((map) => Campaign.fromMap(map)).toList();
   }
 
-  // Tambahkan fungsi ini untuk reset database donasi
+  Future<List<Campaign>> getCampaignsByStatus(String status) async {
+    final db = await instance.database;
+    final result = await db.query('campaigns', where: 'status = ?', whereArgs: [status], orderBy: 'id DESC');
+    return result.map((map) => Campaign.fromMap(map)).toList();
+  }
+
+  Future<List<Campaign>> getCampaignsByCreator(String creator) async {
+    final db = await instance.database;
+    final result = await db.query('campaigns', where: 'creator = ?', whereArgs: [creator], orderBy: 'id DESC');
+    return result.map((map) => Campaign.fromMap(map)).toList();
+  }
+
+  // Update status (approve/reject)
+  Future<int> updateCampaignStatus(int id, String status) async {
+    final db = await instance.database;
+    return await db.update('campaigns', {'status': status}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Update campaign (edit oleh user, status kembalikan ke pending)
+  Future<int> updateCampaign(Campaign campaign) async {
+    final db = await instance.database;
+    return await db.update('campaigns', campaign.toMap(), where: 'id = ?', whereArgs: [campaign.id]);
+  }
+
+  // Delete campaign (opsional, jika dibutuhkan user bisa hapus sebelum di-ACC)
+  Future<int> deleteCampaign(int id) async {
+    final db = await instance.database;
+    return await db.delete('campaigns', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Reset campaign (sudah ada sebelumnya)
   Future<void> deleteAllCampaigns() async {
     final db = await instance.database;
     await db.delete('campaigns');

@@ -8,7 +8,8 @@ import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 
 class AddCampaignScreen extends StatefulWidget {
-  const AddCampaignScreen({Key? key}) : super(key: key);
+  final String creator; // Tambah creator dari DashboardScreen
+  const AddCampaignScreen({Key? key, required this.creator}) : super(key: key);
 
   @override
   State<AddCampaignScreen> createState() => _AddCampaignScreenState();
@@ -25,12 +26,25 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      // Copy ke folder app (agar tidak hilang jika cache dibersihkan)
       final dir = await getApplicationDocumentsDirectory();
       final name = basename(picked.path);
       final savedImage = await File(picked.path).copy('${dir.path}/$name');
       setState(() {
         _imageFile = savedImage;
+      });
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(Duration(days: 7)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        _endDate = picked;
       });
     }
   }
@@ -45,85 +59,69 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
       collectedFund: 0,
       endDate: _endDate!.toIso8601String(),
       imagePath: _imageFile!.path,
+      status: "pending", // selalu pending saat dibuat user
+      creator: widget.creator,
     );
     await CampaignDatabase.instance.insertCampaign(campaign);
-    ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Campaign added!')));
+    ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Campaign berhasil diajukan! Menunggu ACC Admin.')));
     Navigator.pop(this.context, true);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Ask For New Campaign")),
+      appBar: AppBar(title: Text("Ajukan Campaign Baru")),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: _imageFile == null
-                    ? Container(
-                        width: double.infinity,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(Icons.add_a_photo, size: 48, color: Colors.grey[800]),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(_imageFile!, width: double.infinity, height: 180, fit: BoxFit.cover),
-                      ),
-              ),
-              SizedBox(height: 16),
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(labelText: "Judul Campaign"),
-                validator: (v) => v == null || v.isEmpty ? "Wajib diisi" : null,
+                validator: (v) => v == null || v.isEmpty ? "Judul tidak boleh kosong" : null,
               ),
               SizedBox(height: 12),
               TextFormField(
                 controller: _descController,
                 decoration: InputDecoration(labelText: "Deskripsi"),
                 maxLines: 3,
-                validator: (v) => v == null || v.isEmpty ? "Wajib diisi" : null,
+                validator: (v) => v == null || v.isEmpty ? "Deskripsi tidak boleh kosong" : null,
               ),
               SizedBox(height: 12),
               TextFormField(
                 controller: _targetController,
-                decoration: InputDecoration(labelText: "Total Dana yang Dibutuhkan"),
+                decoration: InputDecoration(labelText: "Target Donasi (Rp)"),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? "Wajib diisi" : null,
+                validator: (v) => v == null || v.isEmpty ? "Target tidak boleh kosong" : null,
               ),
               SizedBox(height: 12),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(_endDate == null
-                    ? "Sampai Kapan (Pilih Tanggal)"
-                    : "Sampai: ${_endDate!.day}/${_endDate!.month}/${_endDate!.year}"),
-                trailing: Icon(Icons.calendar_today),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now().add(Duration(days: 1)),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(Duration(days: 365 * 5)),
-                  );
-                  if (picked != null) setState(() => _endDate = picked);
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(_endDate != null
+                        ? "Tanggal selesai: ${_endDate!.day.toString().padLeft(2, '0')}/${_endDate!.month.toString().padLeft(2, '0')}/${_endDate!.year}"
+                        : "Pilih tanggal selesai"),
+                  ),
+                  TextButton(
+                    onPressed: () => _selectDate(context),
+                    child: Text("Pilih Tanggal"),
+                  ),
+                ],
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 12),
+              _imageFile != null
+                  ? Image.file(_imageFile!, height: 100)
+                  : Text("Belum ada gambar"),
+              TextButton(
+                onPressed: _pickImage,
+                child: Text("Pilih Gambar"),
+              ),
+              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveCampaign,
-                child: Text("Simpan Campaign"),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 48),
-                  backgroundColor: Color(0xFF222E3A),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
+                child: Text("Ajukan Campaign"),
               ),
             ],
           ),

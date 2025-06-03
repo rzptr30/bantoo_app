@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../db/user_database.dart';
 import 'dashboard_screen.dart';
 import 'register_screen.dart';
@@ -14,22 +15,51 @@ class _LoginScreenState extends State<LoginScreen> {
   String _error = '';
   bool _isLoading = false;
 
-  void _login() async {
+  Future<void> _login() async {
     setState(() {
       _error = '';
       _isLoading = true;
     });
-    final user = await UserDatabase.instance.getUserByEmailAndPassword(
-      _controllerEmail.text.trim(),
-      _controllerPass.text.trim(),
-    );
+
+    final email = _controllerEmail.text.trim();
+    final password = _controllerPass.text.trim();
+
+    String? username;
+    String? role;
+
+    // Hardcode admin
+    if (email == "wongcilik@gmail.com" && password == "bantuyuk123") {
+      username = "AdminWongCilik";
+      role = "admin";
+    } else {
+      final user = await UserDatabase.instance.getUserByEmailAndPassword(
+        email,
+        password,
+      );
+      if (user != null) {
+        username = user.username;
+        role = "user";
+      }
+    }
+
     setState(() {
       _isLoading = false;
     });
-    if (user != null) {
+
+    if (username != null && role != null) {
+      // Simpan ke SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('role', role);
+      await prefs.setString('username', username);
+      await prefs.setString('email', email);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => DashboardScreen(username: user.username)),
+        MaterialPageRoute(
+            builder: (_) => DashboardScreen(
+                  username: username!, // <-- FIX pakai ! di sini
+                  role: role!,         // <-- FIX pakai ! di sini
+                )),
       );
     } else {
       setState(() => _error = 'Email atau Password salah');

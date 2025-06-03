@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'add_campaign_screen.dart';
 import 'dashboard_emergency_section.dart';
 import 'profile_screen.dart';
+import 'notification_screen.dart'; // Tambah ini
 
 class DashboardScreen extends StatefulWidget {
   final String username;
-  DashboardScreen({required this.username});
+  final String role;
+  DashboardScreen({required this.username, required this.role});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -13,8 +15,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
-
-  // Untuk refresh EmergencyBantooSection setelah tambah campaign
   final GlobalKey<EmergencyBantooSectionState> _emergencyKey = GlobalKey();
 
   final List<Map<String, dynamic>> _navItems = [
@@ -25,8 +25,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   ];
 
   String get _appBarTitle {
-    // Jika di tab Profile, judul "Profile", lainnya "Dashboard"
-    return _selectedIndex == 3 ? "Profile" : "Dashboard";
+    if (_selectedIndex == 3) return "Profile";
+    return _selectedIndex == 0 ? "Dashboard" : _navItems[_selectedIndex]['label'];
   }
 
   @override
@@ -59,24 +59,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ? _DashboardHome(
               username: widget.username,
               emergencyKey: _emergencyKey,
+              role: widget.role,
             )
-          : _selectedIndex == 3
-              ? ProfileScreen(
-                  username: widget.username,
-                  email: '', // Isi ini dengan email user jika ada
-                )
-              : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
-      floatingActionButton: _selectedIndex == 0
+          : _selectedIndex == 2
+              ? NotificationScreen(username: widget.username) // Ganti ini
+              : _selectedIndex == 3
+                  ? ProfileScreen(
+                      username: widget.username,
+                      email: '', // Isi ini dengan email user jika ada
+                      role: widget.role,
+                    )
+                  : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
+      floatingActionButton: (_selectedIndex == 0 && widget.role != "admin")
           ? FloatingActionButton(
               backgroundColor: Color(0xFF222E3A),
               child: Icon(Icons.add),
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => AddCampaignScreen()),
+                  MaterialPageRoute(builder: (_) => AddCampaignScreen(creator: widget.username)),
                 );
                 if (result == true) {
-                  // refresh EmergencyBantooSection
                   _emergencyKey.currentState?.refreshCampaigns();
                 }
               },
@@ -117,10 +120,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
+// ... _DashboardHome sama seperti sebelumnya ...
+
 class _DashboardHome extends StatelessWidget {
   final String username;
+  final String role;
   final GlobalKey<EmergencyBantooSectionState> emergencyKey;
-  const _DashboardHome({required this.username, required this.emergencyKey});
+  const _DashboardHome({required this.username, required this.emergencyKey, required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +183,7 @@ class _DashboardHome extends StatelessWidget {
           ),
           SizedBox(height: 16),
           // Emergency Bantoo Section
-          EmergencyBantooSection(key: emergencyKey),
+          EmergencyBantooSection(key: emergencyKey, role: role, username: username),
           SizedBox(height: 36),
         ],
       ),

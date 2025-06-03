@@ -22,10 +22,12 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
-        '/dashboard': (context) => DashboardScreen(username: ''), // Username bisa diisi saat login sukses
+        // Tambahkan role: ''
+        '/dashboard': (context) => DashboardScreen(username: '', role: ''), // <-- fix di sini
         '/profile': (context) => ProfileScreen(
               username: 'User',
               email: 'user@email.com',
+              role: '', // <-- tambahkan juga kalau wajib
             ),
       },
     );

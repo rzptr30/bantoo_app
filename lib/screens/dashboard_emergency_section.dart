@@ -4,7 +4,9 @@ import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 
 class EmergencyBantooSection extends StatefulWidget {
-  const EmergencyBantooSection({Key? key}) : super(key: key);
+  final String role;
+  final String username;
+  const EmergencyBantooSection({Key? key, required this.role, required this.username}) : super(key: key);
 
   @override
   EmergencyBantooSectionState createState() => EmergencyBantooSectionState();
@@ -20,7 +22,13 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
   }
 
   void _loadCampaigns() {
-    _campaignsFuture = CampaignDatabase.instance.getAllCampaigns();
+    if (widget.role == "admin") {
+      // Admin bisa melihat semua campaign (atau nanti filter pending/approved di UI admin)
+      _campaignsFuture = CampaignDatabase.instance.getAllCampaigns();
+    } else {
+      // User hanya melihat campaign yang sudah di-ACC
+      _campaignsFuture = CampaignDatabase.instance.getCampaignsByStatus("approved");
+    }
   }
 
   /// Panggil ini setelah tambah campaign untuk refresh tampilan
@@ -42,7 +50,9 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
           return Padding(
             padding: const EdgeInsets.all(24.0),
             child: Text(
-              "Belum ada campaign emergency.\nKlik tombol '+' untuk menambah.",
+              widget.role == "admin"
+                  ? "Belum ada campaign."
+                  : "Belum ada campaign emergency.\nKlik tombol '+' untuk menambah.",
               style: TextStyle(color: Colors.grey, fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -94,7 +104,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                       child: Padding(
                         padding: const EdgeInsets.all(10),
                         child: Column(
-                          mainAxisSize: MainAxisSize.min, // FIX: prevent overflow!
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             ClipRRect(
@@ -104,17 +114,17 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                                   ? Image.file(
                                       File(c.imagePath),
                                       width: double.infinity,
-                                      height: 80, // FIX: reduce from 100 to 80
+                                      height: 80,
                                       fit: BoxFit.cover,
                                     )
                                   : Container(
                                       width: double.infinity,
-                                      height: 80, // FIX: reduce from 100 to 80
+                                      height: 80,
                                       color: Colors.grey[300],
                                       child: Icon(Icons.image, size: 40),
                                     ),
                             ),
-                            SizedBox(height: 8), // reduce from 10
+                            SizedBox(height: 8),
                             Text(
                               "Fundraiser",
                               style: TextStyle(
@@ -127,7 +137,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 17),
                             ),
-                            SizedBox(height: 5), // reduce from 6
+                            SizedBox(height: 5),
                             Row(
                               children: [
                                 Expanded(
@@ -141,7 +151,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                                 Text("${(percent * 100).toInt()}%"),
                               ],
                             ),
-                            SizedBox(height: 5), // reduce from 6
+                            SizedBox(height: 5),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
