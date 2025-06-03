@@ -46,5 +46,9 @@ class CampaignDatabase {
     return result.map((map) => Campaign.fromMap(map)).toList();
   }
 
-  // Tambahkan update, delete jika perlu
+  // Tambahkan fungsi ini untuk reset database donasi
+  Future<void> deleteAllCampaigns() async {
+    final db = await instance.database;
+    await db.delete('campaigns');
+  }
 }

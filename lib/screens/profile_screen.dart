@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../db/campaign_database.dart';
 import 'user_info_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final String username;
   final String email;
   final String avatarAsset;
@@ -16,6 +17,11 @@ class ProfileScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
   Widget build(BuildContext context) {
     final menus = [
       {
@@ -26,9 +32,9 @@ class ProfileScreen extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (_) => UserInfoScreen(
-                username: username,
-                email: email,
-                avatarAsset: avatarAsset,
+                username: widget.username,
+                email: widget.email,
+                avatarAsset: widget.avatarAsset,
               ),
             ),
           );
@@ -49,6 +55,41 @@ class ProfileScreen extends StatelessWidget {
         'label': 'Setting',
         'onTap': () {},
       },
+      // Menu reset database donasi
+      {
+        'icon': Icons.delete_forever,
+        'label': 'Reset Database Donasi',
+        'onTap': () async {
+          final shouldDelete = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text('Konfirmasi'),
+              content: Text('Apakah Anda yakin ingin menghapus semua data donasi?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text('Hapus'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (shouldDelete == true) {
+            await CampaignDatabase.instance.deleteAllCampaigns();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Semua data donasi berhasil dihapus!')),
+              );
+            }
+          }
+        },
+      },
     ];
 
     return SingleChildScrollView(
@@ -58,15 +99,15 @@ class ProfileScreen extends StatelessWidget {
           CircleAvatar(
             backgroundColor: Colors.white,
             radius: 50,
-            child: Image.asset(avatarAsset, width: 80),
+            child: Image.asset(widget.avatarAsset, width: 80),
           ),
           SizedBox(height: 16),
           Text(
-            "Hi! $username",
+            "Hi! ${widget.username}",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF183B56)),
           ),
           SizedBox(height: 4),
-          Text(tagline, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          Text(widget.tagline, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
           SizedBox(height: 32),
           ...menus.map((menu) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
