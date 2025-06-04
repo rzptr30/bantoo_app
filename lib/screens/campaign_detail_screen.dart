@@ -1,0 +1,441 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import '../models/campaign.dart';
+import '../models/donation.dart';
+import '../models/doa.dart';
+import '../db/campaign_database.dart';
+
+class CampaignDetailScreen extends StatefulWidget {
+  final Campaign campaign;
+  const CampaignDetailScreen({Key? key, required this.campaign}) : super(key: key);
+
+  @override
+  State<CampaignDetailScreen> createState() => _CampaignDetailScreenState();
+}
+
+class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
+  List<Donation> _donations = [];
+  List<Doa> _doas = [];
+  bool _loading = true;
+  bool _donasiInfoExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDonationsAndDoas();
+  }
+
+  Future<void> _loadDonationsAndDoas() async {
+    final donations = await CampaignDatabase.instance.getDonationsByCampaign(widget.campaign.id!);
+    final doas = await CampaignDatabase.instance.getDoasByCampaign(widget.campaign.id!);
+    setState(() {
+      _donations = donations;
+      _doas = doas;
+      _loading = false;
+    });
+  }
+
+  void _shareDonation(BuildContext context) {
+    final String linkDonasi = "https://donasi.com/campaign/${widget.campaign.id}";
+    final String text =
+        'Yuk bantu donasi untuk "${widget.campaign.title}" di $linkDonasi\n'
+        'Target: Rp${widget.campaign.targetFund}\n'
+        'Sudah terkumpul: Rp${widget.campaign.collectedFund}';
+    Share.share(text);
+  }
+
+  void _showDonationAmountDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        TextEditingController _controller = TextEditingController();
+        List<int> presetNominals = [30000, 50000, 95000, 100000];
+        int? selectedNominal;
+
+        return StatefulBuilder(
+          builder: (context, setState) => Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16,
+                right: 16,
+                top: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Masukkan Nominal Donasi",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
+                ...presetNominals.map((nominal) => ListTile(
+                  leading: Icon(selectedNominal == nominal ? Icons.check_circle : Icons.circle_outlined, color: Colors.blue),
+                  title: Text("Rp${nominal.toString()}"),
+                  onTap: () {
+                    setState(() {
+                      selectedNominal = nominal;
+                      _controller.text = nominal.toString();
+                    });
+                  },
+                )),
+                SizedBox(height: 8),
+                TextField(
+                  controller: _controller,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: "Masukkan Donasi Lainnya",
+                    prefixText: "Rp",
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedNominal = int.tryParse(value);
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      int? nominal = int.tryParse(_controller.text);
+                      if (nominal == null || nominal < 10000) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Minimal donasi Rp10.000")),
+                        );
+                        return;
+                      }
+                      // TODO: Lanjut ke proses pembayaran
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Nominal donasi: Rp$nominal")),
+                      );
+                    },
+                    child: Text("Lanjut pembayaran"),
+                  ),
+                ),
+                SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
+  String _formatRupiah(int value) {
+    return value.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final expired = DateTime.tryParse(widget.campaign.endDate);
+    return Scaffold(
+      appBar: AppBar(title: Text("Detail Campaign")),
+      body: _loading
+          ? Center(child: CircularProgressIndicator())
+          : ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          // ===== RINGKASAN & TOGGLE DONASI =====
+          Card(
+            margin: EdgeInsets.only(bottom: 16),
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Profil dan Judul
+                  Row(
+                    children: [
+                      CircleAvatar(radius: 24, child: Icon(Icons.account_circle, size: 32)),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                widget.campaign.creator,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 6),
+                              Icon(Icons.verified, color: Colors.blue, size: 16),
+                            ],
+                          ),
+                          Text("Identitas terverifikasi", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        ],
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    widget.campaign.title,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Donasi tersedia", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                          Text(
+                            "Rp${_formatRupiah(widget.campaign.collectedFund)}",
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.red[400]),
+                          ),
+                        ],
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _donasiInfoExpanded = !_donasiInfoExpanded),
+                        child: Row(
+                          children: [
+                            Text(_donasiInfoExpanded ? "Sembunyikan" : "Lihat semua", style: TextStyle(fontSize: 13)),
+                            Icon(_donasiInfoExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, size: 16)
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_donasiInfoExpanded)
+                    Container(
+                      margin: EdgeInsets.only(top: 12),
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFEAF4FB),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.campaign, color: Colors.blue, size: 18),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Semakin banyak donasi yang tersedia, semakin besar bantuan yang bisa disalurkan oleh gerakan ini.",
+                              style: TextStyle(fontSize: 13, color: Colors.black87),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          // ===== END RINGKASAN & TOGGLE =====
+
+          if (widget.campaign.imagePath.isNotEmpty && File(widget.campaign.imagePath).existsSync())
+            Container(
+              height: 180,
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(File(widget.campaign.imagePath), fit: BoxFit.cover),
+              ),
+            )
+          else
+            Container(
+              height: 180,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(Icons.image, size: 80, color: Colors.grey[600]),
+            ),
+          Text(
+            widget.campaign.title,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF183B56)),
+          ),
+          SizedBox(height: 8),
+          Text(
+            "Oleh: ${widget.campaign.creator}",
+            style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+          ),
+          SizedBox(height: 8),
+          SizedBox(height: 16),
+          Text(
+            "Deskripsi",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 4),
+          Text(
+            widget.campaign.description,
+            style: TextStyle(fontSize: 15),
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Target Dana", style: TextStyle(fontSize: 15, color: Colors.grey[700])),
+                    Text(
+                      "Rp${_formatRupiah(widget.campaign.targetFund)}",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Terkumpul", style: TextStyle(fontSize: 15, color: Colors.grey[700])),
+                    Text(
+                      "Rp${_formatRupiah(widget.campaign.collectedFund)}",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (expired != null) ...[
+            SizedBox(height: 16),
+            Text(
+              "Sampai: ${expired.day.toString().padLeft(2, '0')}/${expired.month.toString().padLeft(2, '0')}/${expired.year}",
+              style: TextStyle(fontSize: 15, color: Colors.grey[700]),
+            ),
+          ],
+          SizedBox(height: 32),
+          // ===== DONASI SECTION =====
+          Row(
+            children: [
+              Text(
+                "Donasi",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              SizedBox(width: 8),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Color(0xFFEAF1FB),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  "${_donations.length}",
+                  style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          if (_donations.isEmpty)
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                "Belum ada yang donasi.",
+                style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            ..._donations.map((donation) => Card(
+              margin: EdgeInsets.symmetric(vertical: 4),
+              child: ListTile(
+                leading: Icon(Icons.account_circle, size: 40),
+                title: Text(donation.name),
+                subtitle: Text("Donasi sebesar Rp${_formatRupiah(donation.amount)}\n${donation.time}"),
+                isThreeLine: true,
+              ),
+            )),
+          SizedBox(height: 20),
+          // ===== DOA SECTION =====
+          Row(
+            children: [
+              Text(
+                "Doa-doa Orang Baik",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              SizedBox(width: 8),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Color(0xFFEAF1FB),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  "${_doas.length}",
+                  style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          if (_doas.isEmpty)
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                "Belum ada doa/dukungan.",
+                style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            ..._doas.map((doa) => Card(
+              margin: EdgeInsets.symmetric(vertical: 4),
+              child: ListTile(
+                leading: Icon(Icons.account_circle, size: 40),
+                title: Text(doa.name),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(doa.message),
+                    SizedBox(height: 6),
+                    Text(doa.time, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                  ],
+                ),
+                isThreeLine: true,
+              ),
+            )),
+          SizedBox(height: 80),
+        ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => _shareDonation(context),
+                child: Text("Bagikan"),
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  _showDonationAmountDialog(context);
+                },
+                child: Text("Donasi Sekarang"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

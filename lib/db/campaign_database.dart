@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/campaign.dart';
+import '../models/donation.dart';
+import '../models/doa.dart';
 
 class CampaignDatabase {
   static final CampaignDatabase instance = CampaignDatabase._init();
@@ -18,7 +20,12 @@ class CampaignDatabase {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(
+      path,
+      version: 3, // Naikkan versi jika ada perubahan tabel
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -35,6 +42,26 @@ class CampaignDatabase {
         creator TEXT NOT NULL
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE donations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        campaignId INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        amount INTEGER NOT NULL,
+        time TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE doas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        campaignId INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        message TEXT NOT NULL,
+        time TEXT NOT NULL
+      )
+    ''');
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -42,7 +69,30 @@ class CampaignDatabase {
       await db.execute('ALTER TABLE campaigns ADD COLUMN status TEXT NOT NULL DEFAULT "pending";');
       await db.execute('ALTER TABLE campaigns ADD COLUMN creator TEXT NOT NULL DEFAULT "";');
     }
+    if (oldVersion < 3) {
+      // Tambah tabel donations & doas jika update dari versi lama
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS donations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaignId INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          amount INTEGER NOT NULL,
+          time TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS doas (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaignId INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          message TEXT NOT NULL,
+          time TEXT NOT NULL
+        )
+      ''');
+    }
   }
+
+  // === CAMPAIGN ===
 
   Future<int> insertCampaign(Campaign campaign) async {
     final db = await instance.database;
@@ -67,27 +117,49 @@ class CampaignDatabase {
     return result.map((map) => Campaign.fromMap(map)).toList();
   }
 
-  // Update status (approve/reject)
   Future<int> updateCampaignStatus(int id, String status) async {
     final db = await instance.database;
     return await db.update('campaigns', {'status': status}, where: 'id = ?', whereArgs: [id]);
   }
 
-  // Update campaign (edit oleh user, status kembalikan ke pending)
   Future<int> updateCampaign(Campaign campaign) async {
     final db = await instance.database;
     return await db.update('campaigns', campaign.toMap(), where: 'id = ?', whereArgs: [campaign.id]);
   }
 
-  // Delete campaign (opsional, jika dibutuhkan user bisa hapus sebelum di-ACC)
   Future<int> deleteCampaign(int id) async {
     final db = await instance.database;
     return await db.delete('campaigns', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Reset campaign (sudah ada sebelumnya)
   Future<void> deleteAllCampaigns() async {
     final db = await instance.database;
     await db.delete('campaigns');
+  }
+
+  // === DONATION ===
+
+  Future<int> insertDonation(Donation donation) async {
+    final db = await instance.database;
+    return await db.insert('donations', donation.toMap());
+  }
+
+  Future<List<Donation>> getDonationsByCampaign(int campaignId) async {
+    final db = await instance.database;
+    final result = await db.query('donations', where: 'campaignId = ?', whereArgs: [campaignId], orderBy: 'id DESC');
+    return result.map((map) => Donation.fromMap(map)).toList();
+  }
+
+  // === DOA ===
+
+  Future<int> insertDoa(Doa doa) async {
+    final db = await instance.database;
+    return await db.insert('doas', doa.toMap());
+  }
+
+  Future<List<Doa>> getDoasByCampaign(int campaignId) async {
+    final db = await instance.database;
+    final result = await db.query('doas', where: 'campaignId = ?', whereArgs: [campaignId], orderBy: 'id DESC');
+    return result.map((map) => Doa.fromMap(map)).toList();
   }
 }
