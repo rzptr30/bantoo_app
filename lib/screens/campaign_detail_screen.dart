@@ -45,6 +45,117 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     Share.share(text);
   }
 
+  void _showDonorFormDialog(BuildContext context, int nominal) {
+    final _nameController = TextEditingController();
+    final _doaController = TextEditingController();
+    bool isAnonim = false;
+    final _formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 24,
+          ),
+          child: StatefulBuilder(
+            builder: (ctx, setState) => Form(
+              key: _formKey,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  Text(
+                    "Data Diri & Doa",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: isAnonim,
+                        onChanged: (val) {
+                          setState(() {
+                            isAnonim = val ?? false;
+                            if (isAnonim) _nameController.text = "Orang Baik";
+                            else _nameController.clear();
+                          });
+                        },
+                      ),
+                      Text("Donasi sebagai anonim (Orang Baik)"),
+                    ],
+                  ),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: "Nama (wajib)",
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return "Nama wajib diisi";
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _doaController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: "Doa / Dukungan (opsional)",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          final donation = Donation(
+                            campaignId: widget.campaign.id!,
+                            name: _nameController.text.trim(),
+                            amount: nominal,
+                            time: DateTime.now().toString(),
+                          );
+                          final doaMsg = _doaController.text.trim();
+
+                          await CampaignDatabase.instance.insertDonation(donation);
+                          if (doaMsg.isNotEmpty) {
+                            final doa = Doa(
+                              campaignId: widget.campaign.id!,
+                              name: _nameController.text.trim(),
+                              message: doaMsg,
+                              time: DateTime.now().toString(),
+                            );
+                            await CampaignDatabase.instance.insertDoa(doa);
+                          }
+
+                          Navigator.pop(context); // Tutup form
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Donasi berhasil! Terima kasih.")),
+                          );
+                          await _loadDonationsAndDoas();
+                        }
+                      },
+                      child: Text("Donasi Sekarang"),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showDonationAmountDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -110,11 +221,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                         );
                         return;
                       }
-                      // TODO: Lanjut ke proses pembayaran
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Nominal donasi: Rp$nominal")),
-                      );
+                      Navigator.pop(context); // tutup modal nominal
+                      _showDonorFormDialog(context, nominal); // tampilkan form donor
                     },
                     child: Text("Lanjut pembayaran"),
                   ),
