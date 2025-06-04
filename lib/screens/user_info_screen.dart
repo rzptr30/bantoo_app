@@ -26,6 +26,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   String _country = 'Indonesia';
 
   bool _isLoading = false;
+  int? _userId; // <--- TAMBAHKAN ID USER
 
   @override
   void initState() {
@@ -35,7 +36,6 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     _emailController = TextEditingController(text: widget.email);
     _passwordController = TextEditingController(text: '');
     _phoneController = TextEditingController(text: '');
-    // TODO: ambil data phone, country, password dari db kalau sudah ada.
     _loadUserDetails();
   }
 
@@ -43,6 +43,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     setState(() => _isLoading = true);
     final user = await UserDatabase.instance.getUserByUsername(widget.username);
     if (user != null) {
+      _userId = user.id; // <--- SIMPAN ID USER
       _usernameController.text = user.username;
       _emailController.text = user.email;
       _passwordController.text = user.password;
@@ -57,7 +58,9 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     setState(() => _isLoading = true);
 
     // Validasi sederhana
-    if (_usernameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Semua field harus diisi!")),
       );
@@ -65,8 +68,17 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       return;
     }
 
-    // Update ke database
+    if (_userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Terjadi kesalahan, user tidak ditemukan.")),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // Update ke database, sekarang menggunakan ID user yang benar
     final user = User(
+      id: _userId, // <-- pastikan id ikut diisi
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
