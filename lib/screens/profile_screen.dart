@@ -4,6 +4,7 @@ import 'login_screen.dart';
 import 'user_info_screen.dart';
 import 'user_campaign_archive_screen.dart';
 import 'transaction_history_screen.dart';
+import '../db/campaign_database.dart'; // Tambahan import
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -81,7 +82,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {
         'icon': Icons.delete_forever,
         'label': 'Reset Database Donasi',
-        'onTap': () {},
+        'onTap': () async {
+          await CampaignDatabase.instance.deleteAllDonations();
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Semua data donasi berhasil dihapus!')),
+          );
+        },
       },
       // Tambahkan item logout di sini
       {

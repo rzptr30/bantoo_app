@@ -185,6 +185,12 @@ class CampaignDatabase {
     return result.map((map) => Donation.fromMap(map)).toList();
   }
 
+  /// Fungsi untuk menghapus semua data donasi
+  Future<void> deleteAllDonations() async {
+    final db = await instance.database;
+    await db.delete('donations');
+  }
+
   // === DOA ===
 
   Future<int> insertDoa(Doa doa) async {
