@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -8,7 +9,7 @@ import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 
 class AddCampaignScreen extends StatefulWidget {
-  final String creator; // Tambah creator dari DashboardScreen
+  final String creator;
   const AddCampaignScreen({Key? key, required this.creator}) : super(key: key);
 
   @override
@@ -23,15 +24,36 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
   DateTime? _endDate;
   File? _imageFile;
 
-  Future<void> _pickImage() async {
+  /// Ganti parameter cropStyle, aspectRatio sesuai kebutuhan frame!
+  Future<void> _pickAndCropImage({
+    CropStyle cropStyle = CropStyle.rectangle,
+    CropAspectRatio? aspectRatio,
+  }) async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      final dir = await getApplicationDocumentsDirectory();
-      final name = basename(picked.path);
-      final savedImage = await File(picked.path).copy('${dir.path}/$name');
-      setState(() {
-        _imageFile = savedImage;
-      });
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: aspectRatio ?? const CropAspectRatio(ratioX: 16, ratioY: 9),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Gambar',
+            hideBottomControls: true,
+            lockAspectRatio: false,
+          ),
+          IOSUiSettings(
+            title: 'Crop Gambar',
+            aspectRatioLockEnabled: false,
+          ),
+        ],
+      );
+      if (cropped != null) {
+        final dir = await getApplicationDocumentsDirectory();
+        final name = basename(cropped.path);
+        final savedImage = await File(cropped.path).copy('${dir.path}/$name');
+        setState(() {
+          _imageFile = savedImage;
+        });
+      }
     }
   }
 
@@ -59,11 +81,13 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
       collectedFund: 0,
       endDate: _endDate!.toIso8601String(),
       imagePath: _imageFile!.path,
-      status: "pending", // selalu pending saat dibuat user
+      status: "pending",
       creator: widget.creator,
     );
     await CampaignDatabase.instance.insertCampaign(campaign);
-    ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Campaign berhasil diajukan! Menunggu ACC Admin.')));
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      SnackBar(content: Text('Campaign berhasil diajukan! Menunggu ACC Admin.'))
+    );
     Navigator.pop(this.context, true);
   }
 
@@ -114,9 +138,29 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
               _imageFile != null
                   ? Image.file(_imageFile!, height: 100)
                   : Text("Belum ada gambar"),
+              // Contoh penggunaan: crop kotak
               TextButton(
-                onPressed: _pickImage,
-                child: Text("Pilih Gambar"),
+                onPressed: () => _pickAndCropImage(
+                  cropStyle: CropStyle.rectangle,
+                  aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+                ),
+                child: Text("Pilih & Crop Gambar Kotak"),
+              ),
+              // Crop bulat (opsional, bisa dihapus jika tidak perlu)
+              TextButton(
+                onPressed: () => _pickAndCropImage(
+                  cropStyle: CropStyle.circle,
+                  aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+                ),
+                child: Text("Pilih & Crop Gambar Bulat"),
+              ),
+              // Crop rasio 16:9 (opsional)
+              TextButton(
+                onPressed: () => _pickAndCropImage(
+                  cropStyle: CropStyle.rectangle,
+                  aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+                ),
+                child: Text("Pilih & Crop Gambar 16:9"),
               ),
               SizedBox(height: 20),
               ElevatedButton(
