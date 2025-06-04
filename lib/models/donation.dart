@@ -4,6 +4,7 @@ class Donation {
   final String name;
   final int amount;
   final String time;
+  final String paymentMethod;
 
   Donation({
     this.id,
@@ -11,6 +12,7 @@ class Donation {
     required this.name,
     required this.amount,
     required this.time,
+    required this.paymentMethod,
   });
 
   Map<String, dynamic> toMap() => {
@@ -19,6 +21,7 @@ class Donation {
     'name': name,
     'amount': amount,
     'time': time,
+    'paymentMethod': paymentMethod,
   };
 
   factory Donation.fromMap(Map<String, dynamic> map) => Donation(
@@ -27,5 +30,6 @@ class Donation {
     name: map['name'],
     amount: map['amount'],
     time: map['time'],
+    paymentMethod: map['paymentMethod'] ?? '', 
   );
 }

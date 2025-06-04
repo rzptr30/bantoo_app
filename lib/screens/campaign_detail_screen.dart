@@ -45,6 +45,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     Share.share(text);
   }
 
+  // STEP 1: Form data diri & doa
   void _showDonorFormDialog(BuildContext context, int nominal) {
     final _nameController = TextEditingController();
     final _doaController = TextEditingController();
@@ -117,33 +118,16 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          final donation = Donation(
-                            campaignId: widget.campaign.id!,
-                            name: _nameController.text.trim(),
-                            amount: nominal,
-                            time: DateTime.now().toString(),
+                          Navigator.pop(context); // Tutup form data diri
+                          _showPaymentMethodDialog(
+                            context,
+                            nominal,
+                            _nameController.text.trim(),
+                            _doaController.text.trim(),
                           );
-                          final doaMsg = _doaController.text.trim();
-
-                          await CampaignDatabase.instance.insertDonation(donation);
-                          if (doaMsg.isNotEmpty) {
-                            final doa = Doa(
-                              campaignId: widget.campaign.id!,
-                              name: _nameController.text.trim(),
-                              message: doaMsg,
-                              time: DateTime.now().toString(),
-                            );
-                            await CampaignDatabase.instance.insertDoa(doa);
-                          }
-
-                          Navigator.pop(context); // Tutup form
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Donasi berhasil! Terima kasih.")),
-                          );
-                          await _loadDonationsAndDoas();
                         }
                       },
-                      child: Text("Donasi Sekarang"),
+                      child: Text("Lanjut Pilih Metode Pembayaran"),
                     ),
                   ),
                   SizedBox(height: 16),
@@ -153,6 +137,61 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ),
         );
       },
+    );
+  }
+
+  // STEP 2: Modal pilih metode pembayaran, langsung auto berhasil
+  void _showPaymentMethodDialog(BuildContext context, int nominal, String donorName, String doaMsg) {
+    List<String> metode = [
+      "QRIS", "ShopeePay", "DANA", "GoPay", "VA BCA", "VA BRI", "VA Mandiri"
+    ];
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Pilih Metode Pembayaran", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              SizedBox(height: 14),
+              ...metode.map((m) => ListTile(
+                leading: Icon(Icons.payment),
+                title: Text(m),
+                onTap: () async {
+                  // Simpan donasi ke db dengan paymentMethod = m
+                  final donation = Donation(
+                    campaignId: widget.campaign.id!,
+                    name: donorName,
+                    amount: nominal,
+                    time: DateTime.now().toString(),
+                    paymentMethod: m,
+                  );
+                  await CampaignDatabase.instance.insertDonation(donation);
+                  if (doaMsg.isNotEmpty) {
+                    final doa = Doa(
+                      campaignId: widget.campaign.id!,
+                      name: donorName,
+                      message: doaMsg,
+                      time: DateTime.now().toString(),
+                    );
+                    await CampaignDatabase.instance.insertDoa(doa);
+                  }
+                  Navigator.pop(context); // Tutup modal metode
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Donasi berhasil! Terima kasih sudah berdonasi lewat $m.")),
+                  );
+                  await _loadDonationsAndDoas();
+                },
+              )),
+            ],
+          ),
+        );
+      }
     );
   }
 
@@ -222,7 +261,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                         return;
                       }
                       Navigator.pop(context); // tutup modal nominal
-                      _showDonorFormDialog(context, nominal); // tampilkan form donor
+                      _showDonorFormDialog(context, nominal); // lanjut ke form donor
                     },
                     child: Text("Lanjut pembayaran"),
                   ),
@@ -461,7 +500,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               child: ListTile(
                 leading: Icon(Icons.account_circle, size: 40),
                 title: Text(donation.name),
-                subtitle: Text("Donasi sebesar Rp${_formatRupiah(donation.amount)}\n${donation.time}"),
+                subtitle: Text(
+                  "Donasi sebesar Rp${_formatRupiah(donation.amount)}\n"
+                  "Via: ${donation.paymentMethod}\n"
+                  "${donation.time}",
+                ),
                 isThreeLine: true,
               ),
             )),

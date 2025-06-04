@@ -22,7 +22,7 @@ class CampaignDatabase {
 
     return await openDatabase(
       path,
-      version: 3, // Naikkan versi jika ada perubahan tabel
+      version: 4, // Naikkan versi jika ada perubahan tabel
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -49,7 +49,8 @@ class CampaignDatabase {
         campaignId INTEGER NOT NULL,
         name TEXT NOT NULL,
         amount INTEGER NOT NULL,
-        time TEXT NOT NULL
+        time TEXT NOT NULL,
+        paymentMethod TEXT NOT NULL
       )
     ''');
 
@@ -77,7 +78,8 @@ class CampaignDatabase {
           campaignId INTEGER NOT NULL,
           name TEXT NOT NULL,
           amount INTEGER NOT NULL,
-          time TEXT NOT NULL
+          time TEXT NOT NULL,
+          paymentMethod TEXT NOT NULL
         )
       ''');
       await db.execute('''
@@ -89,6 +91,12 @@ class CampaignDatabase {
           time TEXT NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 4) {
+      // Tambah kolom paymentMethod jika belum ada
+      try {
+        await db.execute('ALTER TABLE donations ADD COLUMN paymentMethod TEXT NOT NULL DEFAULT "";');
+      } catch (_) {}
     }
   }
 
