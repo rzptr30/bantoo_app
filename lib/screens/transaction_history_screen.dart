@@ -41,7 +41,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Belum ada riwayat donasi.'));
+            return const Center(child: Text('Belum ada transaksi'));
           }
           final donations = snapshot.data!;
           return ListView.builder(
