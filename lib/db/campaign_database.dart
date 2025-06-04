@@ -145,6 +145,22 @@ class CampaignDatabase {
     await db.delete('campaigns');
   }
 
+  /// Ambil satu campaign berdasarkan id
+  Future<Campaign?> getCampaignById(int id) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'campaigns',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return Campaign.fromMap(result.first);
+    } else {
+      return null;
+    }
+  }
+
   // === DONATION ===
 
   Future<int> insertDonation(Donation donation) async {
@@ -155,6 +171,17 @@ class CampaignDatabase {
   Future<List<Donation>> getDonationsByCampaign(int campaignId) async {
     final db = await instance.database;
     final result = await db.query('donations', where: 'campaignId = ?', whereArgs: [campaignId], orderBy: 'id DESC');
+    return result.map((map) => Donation.fromMap(map)).toList();
+  }
+
+  Future<List<Donation>> getDonationsByUser(String username) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'donations',
+      where: 'name = ?',
+      whereArgs: [username],
+      orderBy: 'id DESC',
+    );
     return result.map((map) => Donation.fromMap(map)).toList();
   }
 

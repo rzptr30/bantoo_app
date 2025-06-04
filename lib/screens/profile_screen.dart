@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 import 'user_info_screen.dart';
 import 'user_campaign_archive_screen.dart';
+import 'transaction_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -63,7 +64,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {
         'icon': Icons.history,
         'label': 'Transaction History',
-        'onTap': () {},
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TransactionHistoryScreen(username: widget.username),
+            ),
+          );
+        },
       },
       {
         'icon': Icons.settings,
