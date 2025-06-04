@@ -20,6 +20,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   bool _loading = true;
   bool _donasiInfoExpanded = false;
 
+  int get _totalTerkumpul => _donations.fold(0, (sum, d) => sum + d.amount);
+  int get _targetFund => widget.campaign.targetFund;
+  double get _percent => _targetFund > 0 ? (_totalTerkumpul / _targetFund).clamp(0.0, 1.0) : 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -41,11 +45,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     final String text =
         'Yuk bantu donasi untuk "${widget.campaign.title}" di $linkDonasi\n'
         'Target: Rp${widget.campaign.targetFund}\n'
-        'Sudah terkumpul: Rp${widget.campaign.collectedFund}';
+        'Sudah terkumpul: Rp${_totalTerkumpul}';
     Share.share(text);
   }
 
-  // STEP 1: Form data diri & doa
   void _showDonorFormDialog(BuildContext context, int nominal) {
     final _nameController = TextEditingController();
     final _doaController = TextEditingController();
@@ -140,7 +143,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     );
   }
 
-  // STEP 2: Modal pilih metode pembayaran, langsung auto berhasil
   void _showPaymentMethodDialog(BuildContext context, int nominal, String donorName, String doaMsg) {
     List<String> metode = [
       "QRIS", "ShopeePay", "DANA", "GoPay", "VA BCA", "VA BRI", "VA Mandiri"
@@ -163,7 +165,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                 leading: Icon(Icons.payment),
                 title: Text(m),
                 onTap: () async {
-                  // Simpan donasi ke db dengan paymentMethod = m
                   final donation = Donation(
                     campaignId: widget.campaign.id!,
                     name: donorName,
@@ -181,7 +182,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     );
                     await CampaignDatabase.instance.insertDoa(doa);
                   }
-                  Navigator.pop(context); // Tutup modal metode
+                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Donasi berhasil! Terima kasih sudah berdonasi lewat $m.")),
                   );
@@ -260,8 +261,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                         );
                         return;
                       }
-                      Navigator.pop(context); // tutup modal nominal
-                      _showDonorFormDialog(context, nominal); // lanjut ke form donor
+                      Navigator.pop(context);
+                      _showDonorFormDialog(context, nominal);
                     },
                     child: Text("Lanjut pembayaran"),
                   ),
@@ -292,7 +293,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           : ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // ===== RINGKASAN & TOGGLE DONASI =====
+          // ===== RINGKASAN, PROGRESS BAR, DAN TOGGLE DONASI =====
           Card(
             margin: EdgeInsets.only(bottom: 16),
             elevation: 2,
@@ -329,7 +330,29 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     widget.campaign.title,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  SizedBox(height: 14),
+                  SizedBox(height: 12),
+                  // PROGRESS BAR DAN INFO DANA
+                  Text("Donasi terkumpul", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                  Row(
+                    children: [
+                      Text(
+                        "Rp${_formatRupiah(_totalTerkumpul)}",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue[800]),
+                      ),
+                      SizedBox(width: 8),
+                      Text("dari target Rp${_formatRupiah(_targetFund)}", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: _percent,
+                    backgroundColor: Colors.grey[300],
+                    color: Colors.blue,
+                    minHeight: 10,
+                  ),
+                  SizedBox(height: 6),
+                  Text("${(_percent * 100).toStringAsFixed(1)}%", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                  SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -338,7 +361,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                         children: [
                           Text("Donasi tersedia", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                           Text(
-                            "Rp${_formatRupiah(widget.campaign.collectedFund)}",
+                            "Rp${_formatRupiah(_totalTerkumpul)}",
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.red[400]),
                           ),
                         ],
@@ -379,7 +402,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               ),
             ),
           ),
-          // ===== END RINGKASAN & TOGGLE =====
+          // ===== END RINGKASAN & PROGRESS =====
 
           if (widget.campaign.imagePath.isNotEmpty && File(widget.campaign.imagePath).existsSync())
             Container(
@@ -442,7 +465,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   children: [
                     Text("Terkumpul", style: TextStyle(fontSize: 15, color: Colors.grey[700])),
                     Text(
-                      "Rp${_formatRupiah(widget.campaign.collectedFund)}",
+                      "Rp${_formatRupiah(_totalTerkumpul)}",
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ],
