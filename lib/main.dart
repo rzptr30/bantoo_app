@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
               username: 'User',
               email: 'user@email.com',
               role: '', // <-- tambahkan juga kalau wajib
+              avatarAsset: "assets/images/default_avatar.png",
             ),
       },
     );

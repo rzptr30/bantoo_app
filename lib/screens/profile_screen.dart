@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../db/campaign_database.dart';
-import 'user_info_screen.dart';
-import 'login_screen.dart';
 import 'admin_campaign_approval_screen.dart';
-import 'user_campaign_archive_screen.dart'; // Tambah ini
+import 'user_campaign_archive_screen.dart';
+import 'user_info_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String username;
   final String email;
-  final String avatarAsset;
-  final String tagline;
   final String role;
-
-  const ProfileScreen({
-    Key? key,
-    required this.username,
-    required this.email,
-    this.avatarAsset = 'assets/profile_avatar.png',
-    this.tagline = "Bantoo's Guardian Angel",
-    required this.role,
-  }) : super(key: key);
+  final String avatarAsset;
+  const ProfileScreen(
+      {Key? key,
+      required this.username,
+      required this.email,
+      required this.role,
+      required this.avatarAsset})
+      : super(key: key);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -29,10 +23,10 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
-    final menus = [
+    final List<Map<String, dynamic>> items = [
       if (widget.role == "admin")
         {
-          'icon': Icons.admin_panel_settings,
+          'icon': Icons.check,
           'label': 'ACC Campaign (Admin)',
           'onTap': () {
             Navigator.push(
@@ -41,16 +35,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           },
         },
-      {
-        'icon': Icons.archive,
-        'label': 'Arsip Campaign Saya',
-        'onTap': () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => UserCampaignArchiveScreen(username: widget.username)),
-          );
+      if (widget.role != "admin")
+        {
+          'icon': Icons.archive,
+          'label': 'Arsip Campaign Saya',
+          'onTap': () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) =>
+                      UserCampaignArchiveScreen(username: widget.username)),
+            );
+          },
         },
-      },
       {
         'icon': Icons.person,
         'label': 'User Information',
@@ -85,83 +82,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {
         'icon': Icons.delete_forever,
         'label': 'Reset Database Donasi',
-        'onTap': () async {
-          final shouldDelete = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text('Konfirmasi'),
-              content: Text('Apakah Anda yakin ingin menghapus semua data donasi?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text('Batal'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text('Hapus'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                ),
-              ],
-            ),
-          );
-          if (shouldDelete == true) {
-            await CampaignDatabase.instance.deleteAllCampaigns();
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Semua data donasi berhasil dihapus!')),
-              );
-            }
-          }
-        },
-      },
-      {
-        'icon': Icons.logout,
-        'label': 'Logout',
-        'onTap': () async {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.clear();
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => LoginScreen()),
-            (route) => false,
-          );
-        },
+        'onTap': () {},
       },
     ];
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          SizedBox(height: 32),
-          CircleAvatar(
-            backgroundColor: Colors.white,
-            radius: 50,
-            child: Image.asset(widget.avatarAsset, width: 80),
-          ),
-          SizedBox(height: 16),
-          Text(
-            "Hi! ${widget.username}",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF183B56)),
-          ),
-          SizedBox(height: 4),
-          Text(widget.tagline, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-          SizedBox(height: 32),
-          ...menus.map((menu) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 2,
-              child: ListTile(
-                leading: Icon(menu['icon'] as IconData, color: Colors.black54, size: 28),
-                title: Text(menu['label'] as String, style: TextStyle(fontWeight: FontWeight.w500)),
-                trailing: Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
-                onTap: menu['onTap'] as void Function()?,
-              ),
-            ),
-          )),
-        ],
+    return Scaffold(
+      appBar: AppBar(title: Text("Profile")),
+      body: ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return ListTile(
+            leading: Icon(item['icon']),
+            title: Text(item['label']),
+            onTap: item['onTap'],
+          );
+        },
       ),
     );
   }

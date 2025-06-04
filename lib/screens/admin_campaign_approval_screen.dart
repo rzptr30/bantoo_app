@@ -3,6 +3,7 @@ import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 import '../db/notification_database.dart';
 import '../models/notification_item.dart';
+import 'admin_campaign_detail_screen.dart'; // Tambahkan import ini
 
 class AdminCampaignApprovalScreen extends StatefulWidget {
   @override
@@ -10,21 +11,21 @@ class AdminCampaignApprovalScreen extends StatefulWidget {
 }
 
 class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScreen> {
-  late Future<List<Campaign>> _pendingCampaignsFuture;
+  late Future<List<Campaign>> _allCampaignsFuture;
 
   @override
   void initState() {
     super.initState();
-    _loadPendingCampaigns();
+    _loadAllCampaigns();
   }
 
-  void _loadPendingCampaigns() {
-    _pendingCampaignsFuture = CampaignDatabase.instance.getCampaignsByStatus("pending");
+  void _loadAllCampaigns() {
+    _allCampaignsFuture = CampaignDatabase.instance.getAllCampaigns();
   }
 
   void _refresh() {
     setState(() {
-      _loadPendingCampaigns();
+      _loadAllCampaigns();
     });
   }
 
@@ -55,7 +56,7 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
     return Scaffold(
       appBar: AppBar(title: Text("ACC Campaign (Admin)")),
       body: FutureBuilder<List<Campaign>>(
-        future: _pendingCampaignsFuture,
+        future: _allCampaignsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -79,21 +80,32 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                   title: Text(c.title),
                   subtitle: Text("Oleh: ${c.creator}\nTarget: Rp${c.targetFund}\nStatus: ${c.status}"),
                   isThreeLine: true,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.check, color: Colors.green),
-                        tooltip: "ACC",
-                        onPressed: () => _approveCampaign(c),
+                  onTap: () {
+                    // Navigasi ke halaman detail campaign
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AdminCampaignDetailScreen(campaign: c),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.close, color: Colors.red),
-                        tooltip: "Tolak",
-                        onPressed: () => _rejectCampaign(c),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
+                  trailing: c.status == "pending"
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.check, color: Colors.green),
+                              tooltip: "ACC",
+                              onPressed: () => _approveCampaign(c),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.close, color: Colors.red),
+                              tooltip: "Tolak",
+                              onPressed: () => _rejectCampaign(c),
+                            ),
+                          ],
+                        )
+                      : null,
                 ),
               );
             },

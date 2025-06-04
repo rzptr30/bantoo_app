@@ -23,7 +23,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
 
   void _loadCampaigns() {
     if (widget.role == "admin") {
-      // Admin bisa melihat semua campaign (atau nanti filter pending/approved di UI admin)
+      // Admin bisa melihat semua campaign (pending, approved, rejected)
       _campaignsFuture = CampaignDatabase.instance.getAllCampaigns();
     } else {
       // User hanya melihat campaign yang sudah di-ACC
@@ -36,6 +36,32 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
     setState(() {
       _loadCampaigns();
     });
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case "pending":
+        return Colors.orange;
+      case "approved":
+        return Colors.green;
+      case "rejected":
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case "pending":
+        return "Pending";
+      case "approved":
+        return "Active";
+      case "rejected":
+        return "Rejected";
+      default:
+        return status;
+    }
   }
 
   @override
@@ -97,101 +123,127 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                     width: 250,
                     margin: EdgeInsets.only(
                         left: i == 0 ? 16 : 8, right: 8, bottom: 8),
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
-                      elevation: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: c.imagePath.isNotEmpty &&
-                                      File(c.imagePath).existsSync()
-                                  ? Image.file(
-                                      File(c.imagePath),
-                                      width: double.infinity,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      width: double.infinity,
-                                      height: 80,
-                                      color: Colors.grey[300],
-                                      child: Icon(Icons.image, size: 40),
-                                    ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              "Fundraiser",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            Text(
-                              c.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 17),
-                            ),
-                            SizedBox(height: 5),
-                            Row(
+                    child: Stack(
+                      children: [
+                        Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18)),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: LinearProgressIndicator(
-                                    value: percent,
-                                    backgroundColor: Colors.grey[300],
-                                    color: Colors.green,
-                                  ),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: c.imagePath.isNotEmpty &&
+                                          File(c.imagePath).existsSync()
+                                      ? Image.file(
+                                          File(c.imagePath),
+                                          width: double.infinity,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Container(
+                                          width: double.infinity,
+                                          height: 80,
+                                          color: Colors.grey[300],
+                                          child: Icon(Icons.image, size: 40),
+                                        ),
                                 ),
-                                SizedBox(width: 8),
-                                Text("${(percent * 100).toInt()}%"),
-                              ],
-                            ),
-                            SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                SizedBox(height: 8),
+                                Text(
+                                  c.creator,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                                Text(
+                                  c.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 17),
+                                ),
+                                SizedBox(height: 5),
+                                Row(
                                   children: [
-                                    Text("collected",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[700])),
-                                    Text(
-                                      "Rp${c.collectedFund.toString()}",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15),
+                                    Expanded(
+                                      child: LinearProgressIndicator(
+                                        value: percent,
+                                        backgroundColor: Colors.grey[300],
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text("${(percent * 100).toInt()}%"),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text("collected",
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[700])),
+                                        Text(
+                                          "Rp${c.collectedFund.toString()}",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text("expired",
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[700])),
+                                        Text(
+                                          expired != null
+                                              ? "${expired.day.toString().padLeft(2, '0')}/${expired.month.toString().padLeft(2, '0')}/${expired.year}"
+                                              : "-",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text("expired",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[700])),
-                                    Text(
-                                      expired != null
-                                          ? "${expired.day.toString().padLeft(2, '0')}/${expired.month.toString().padLeft(2, '0')}/${expired.year}"
-                                          : "-",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15),
-                                    ),
-                                  ],
-                                ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                        // Status badge di pojok kanan atas untuk admin
+                        if (widget.role == "admin")
+                          Positioned(
+                            right: 14,
+                            top: 14,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: _statusColor(c.status).withOpacity(0.13),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: _statusColor(c.status)),
+                              ),
+                              child: Text(
+                                _statusLabel(c.status),
+                                style: TextStyle(
+                                  color: _statusColor(c.status),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   );
                 },

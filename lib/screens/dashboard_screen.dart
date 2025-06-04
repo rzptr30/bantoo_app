@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'add_campaign_screen.dart';
 import 'dashboard_emergency_section.dart';
 import 'profile_screen.dart';
-import 'notification_screen.dart'; // Tambah ini
+import 'notification_screen.dart'; 
+import '../db/campaign_database.dart';
+import '../models/campaign.dart';
+import 'admin_campaign_approval_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -62,12 +65,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               role: widget.role,
             )
           : _selectedIndex == 2
-              ? NotificationScreen(username: widget.username) // Ganti ini
+              ? NotificationScreen(username: widget.username)
               : _selectedIndex == 3
                   ? ProfileScreen(
                       username: widget.username,
-                      email: '', // Isi ini dengan email user jika ada
+                      email: '', // Isi dengan email user jika ada
                       role: widget.role,
+                      avatarAsset: "assets/images/default_avatar.png",
                     )
                   : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
       floatingActionButton: (_selectedIndex == 0 && widget.role != "admin")
@@ -120,15 +124,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ... _DashboardHome sama seperti sebelumnya ...
-
-
+// ------------------------------
+// _DashboardHome
+// ------------------------------
 
 class _DashboardHome extends StatelessWidget {
   final String username;
   final String role;
   final GlobalKey<EmergencyBantooSectionState> emergencyKey;
   const _DashboardHome({required this.username, required this.emergencyKey, required this.role});
+
+  // Section Pending Approval (hanya admin)
+  Widget _pendingCampaignSection(BuildContext context) {
+    return FutureBuilder<List<Campaign>>(
+      future: CampaignDatabase.instance.getCampaignsByStatus("pending"),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return SizedBox();
+        }
+        final pendingCampaigns = snapshot.data!;
+        return Card(
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  "Campaign Pending Approval",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+              Divider(),
+              ...pendingCampaigns.map((c) => ListTile(
+                    title: Text(c.title),
+                    subtitle: Text("Oleh: ${c.creator}"),
+                    trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => AdminCampaignApprovalScreen()),
+                      );
+                    },
+                  )),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +228,9 @@ class _DashboardHome extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16),
-          // Emergency Bantoo Section
+          // Section Pending Approval (khusus admin)
+          if (role == "admin") _pendingCampaignSection(context),
+          // Emergency Bantoo Section (hanya tampilkan campaign approved untuk admin)
           EmergencyBantooSection(key: emergencyKey, role: role, username: username),
           SizedBox(height: 36),
         ],
