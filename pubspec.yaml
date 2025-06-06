@@ -31,13 +31,13 @@ flutter:
     - assets/logo_bantoo.png
     - assets/header_img.png
     - assets/dashboard_avatar.png
-    - assets/qris_example.png
+    # - assets/qris_example.png
     - assets/icons/qris.png
     - assets/icons/shopeepay.png
     - assets/icons/dana.png
     - assets/icons/gopay.png
     - assets/icons/bca.png
     - assets/icons/bri.png
-    - assets/icons/mandiri.png
+    # - assets/icons/mandiri.png
     - assets/illustrations/payment_success.png
     - assets/illustrations/payment_instruction.png

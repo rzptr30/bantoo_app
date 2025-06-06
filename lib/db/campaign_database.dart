@@ -22,7 +22,7 @@ class CampaignDatabase {
 
     return await openDatabase(
       path,
-      version: 4, // Naikkan versi jika ada perubahan tabel
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -71,7 +71,6 @@ class CampaignDatabase {
       await db.execute('ALTER TABLE campaigns ADD COLUMN creator TEXT NOT NULL DEFAULT "";');
     }
     if (oldVersion < 3) {
-      // Tambah tabel donations & doas jika update dari versi lama
       await db.execute('''
         CREATE TABLE IF NOT EXISTS donations (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,7 +92,6 @@ class CampaignDatabase {
       ''');
     }
     if (oldVersion < 4) {
-      // Tambah kolom paymentMethod jika belum ada
       try {
         await db.execute('ALTER TABLE donations ADD COLUMN paymentMethod TEXT NOT NULL DEFAULT "";');
       } catch (_) {}
@@ -202,5 +200,19 @@ class CampaignDatabase {
     final db = await instance.database;
     final result = await db.query('doas', where: 'campaignId = ?', whereArgs: [campaignId], orderBy: 'id DESC');
     return result.map((map) => Doa.fromMap(map)).toList();
+  }
+
+  /// Fungsi untuk menghapus semua data doa
+  Future<void> deleteAllDoas() async {
+    final db = await instance.database;
+    await db.delete('doas');
+  }
+
+  /// Fungsi untuk menghapus semua data campaign, donasi, dan doa sekaligus
+  Future<void> deleteAllCampaignRelated() async {
+    final db = await instance.database;
+    await db.delete('donations');
+    await db.delete('doas');
+    await db.delete('campaigns');
   }
 }

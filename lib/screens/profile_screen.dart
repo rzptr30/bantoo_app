@@ -83,14 +83,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'icon': Icons.delete_forever,
         'label': 'Reset Database Donasi',
         'onTap': () async {
-          await CampaignDatabase.instance.deleteAllDonations();
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Semua data donasi berhasil dihapus!')),
+          // Tampilkan dialog konfirmasi sebelum menghapus
+          final confirm = await showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: Text('Konfirmasi'),
+              content: Text('Hapus semua data campaign, donasi, dan doa? Data user TIDAK akan dihapus.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Batal'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('Hapus'),
+                ),
+              ],
+            ),
           );
+          if (confirm == true) {
+            await CampaignDatabase.instance.deleteAllCampaignRelated();
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Semua data campaign, donasi, doa berhasil dihapus!\nData user tetap aman.')),
+            );
+          }
         },
       },
-      // Tambahkan item logout di sini
       {
         'icon': Icons.logout,
         'label': 'Logout',
