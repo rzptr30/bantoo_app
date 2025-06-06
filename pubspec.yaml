@@ -39,5 +39,6 @@ flutter:
     - assets/icons/bca.png
     - assets/icons/bri.png
     - assets/icons/mandiri.png
+    - assets/hands_bg.png
     - assets/illustrations/payment_success.png
     - assets/illustrations/payment_instruction.png

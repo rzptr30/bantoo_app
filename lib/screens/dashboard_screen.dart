@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'add_campaign_screen.dart';
 import 'dashboard_emergency_section.dart';
 import 'profile_screen.dart';
-import 'notification_screen.dart'; 
+import 'notification_screen.dart';
 import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 import 'admin_campaign_approval_screen.dart';
+import 'request_campaign_screen.dart'; // Tambahkan import ini
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -79,9 +80,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: Color(0xFF222E3A),
               child: Icon(Icons.add),
               onPressed: () async {
+                // Ganti: buka RequestCampaignScreen dulu, bukan langsung AddCampaignScreen
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => AddCampaignScreen(creator: widget.username)),
+                  MaterialPageRoute(
+                    builder: (_) => RequestCampaignScreen(creator: widget.username),
+                  ),
                 );
                 if (result == true) {
                   _emergencyKey.currentState?.refreshCampaigns();
