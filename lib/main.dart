@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -18,16 +19,17 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         fontFamily: 'Montserrat',
       ),
-      initialRoute: '/',
+      // SplashScreen sebagai halaman pertama
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => SplashScreen(),
         '/': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
-        // Tambahkan role: ''
-        '/dashboard': (context) => DashboardScreen(username: '', role: ''), // <-- fix di sini
+        '/dashboard': (context) => DashboardScreen(username: '', role: ''),
         '/profile': (context) => ProfileScreen(
               username: 'User',
               email: 'user@email.com',
-              role: '', // <-- tambahkan juga kalau wajib
+              role: '',
               avatarAsset: "assets/images/default_avatar.png",
             ),
       },
