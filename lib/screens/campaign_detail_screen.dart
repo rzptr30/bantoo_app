@@ -18,7 +18,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   List<Donation> _donations = [];
   List<Doa> _doas = [];
   bool _loading = true;
-  bool _donasiInfoExpanded = false;
 
   int get _totalTerkumpul => _donations.fold(0, (sum, d) => sum + d.amount);
   int get _targetFund => widget.campaign.targetFund;
@@ -293,7 +292,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           : ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // ===== RINGKASAN, PROGRESS BAR, DAN TOGGLE DONASI =====
+          // ===== RINGKASAN, PROGRESS BAR =====
           Card(
             margin: EdgeInsets.only(bottom: 16),
             elevation: 2,
@@ -353,51 +352,27 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   SizedBox(height: 6),
                   Text("${(_percent * 100).toStringAsFixed(1)}%", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                   SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Donasi tersedia", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-                          Text(
-                            "Rp${_formatRupiah(_totalTerkumpul)}",
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.red[400]),
-                          ),
-                        ],
-                      ),
-                      TextButton(
-                        onPressed: () => setState(() => _donasiInfoExpanded = !_donasiInfoExpanded),
-                        child: Row(
-                          children: [
-                            Text(_donasiInfoExpanded ? "Sembunyikan" : "Lihat semua", style: TextStyle(fontSize: 13)),
-                            Icon(_donasiInfoExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, size: 16)
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_donasiInfoExpanded)
-                    Container(
-                      margin: EdgeInsets.only(top: 12),
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Color(0xFFEAF4FB),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.campaign, color: Colors.blue, size: 18),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              "Semakin banyak donasi yang tersedia, semakin besar bantuan yang bisa disalurkan oleh gerakan ini.",
-                              style: TextStyle(fontSize: 13, color: Colors.black87),
-                            ),
-                          ),
-                        ],
-                      ),
+                  // Bagian info donasi yang sebelumnya expandable DIHAPUS
+                  Container(
+                    margin: EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFEAF4FB),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.campaign, color: Colors.blue, size: 18),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Semakin banyak donasi yang tersedia, semakin besar bantuan yang bisa disalurkan oleh gerakan ini.",
+                            style: TextStyle(fontSize: 13, color: Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
