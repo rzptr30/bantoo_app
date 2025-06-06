@@ -22,7 +22,7 @@ class CampaignDatabase {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -50,7 +50,8 @@ class CampaignDatabase {
         name TEXT NOT NULL,
         amount INTEGER NOT NULL,
         time TEXT NOT NULL,
-        paymentMethod TEXT NOT NULL
+        paymentMethod TEXT NOT NULL,
+        isAnonim INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -78,7 +79,8 @@ class CampaignDatabase {
           name TEXT NOT NULL,
           amount INTEGER NOT NULL,
           time TEXT NOT NULL,
-          paymentMethod TEXT NOT NULL
+          paymentMethod TEXT NOT NULL,
+          isAnonim INTEGER NOT NULL DEFAULT 0
         )
       ''');
       await db.execute('''
@@ -94,6 +96,11 @@ class CampaignDatabase {
     if (oldVersion < 4) {
       try {
         await db.execute('ALTER TABLE donations ADD COLUMN paymentMethod TEXT NOT NULL DEFAULT "";');
+      } catch (_) {}
+    }
+    if (oldVersion < 5) {
+      try {
+        await db.execute('ALTER TABLE donations ADD COLUMN isAnonim INTEGER NOT NULL DEFAULT 0;');
       } catch (_) {}
     }
   }

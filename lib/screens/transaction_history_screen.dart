@@ -3,7 +3,6 @@ import '../db/campaign_database.dart';
 import '../models/donation.dart';
 import '../models/campaign.dart';
 
-// Utility untuk format rupiah
 String formatRupiah(int value) {
   return value.toString().replaceAllMapped(
     RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -48,7 +47,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             itemCount: donations.length,
             itemBuilder: (context, i) {
               final d = donations[i];
-              // Ambil data campaign terkait
               return FutureBuilder<Campaign?>(
                 future: CampaignDatabase.instance.getCampaignById(d.campaignId),
                 builder: (context, campSnap) {
@@ -62,7 +60,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     );
                   }
                   final c = campSnap.data!;
-                  // Ambil total donasi terkumpul untuk progress bar
                   return FutureBuilder<List<Donation>>(
                     future: CampaignDatabase.instance.getDonationsByCampaign(c.id!),
                     builder: (context, donSnap) {
@@ -76,10 +73,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         child: ListTile(
-                          title: Text(c.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          // Tampilkan "Orang Baik" jika anonim
+                          title: Text(
+                            d.isAnonim ? "Orang Baik" : d.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Text(c.title, style: TextStyle(fontWeight: FontWeight.w500)),
                               const SizedBox(height: 4),
                               Text('Nominal: Rp${formatRupiah(d.amount)}'),
                               Text('Tanggal: ${d.time}'),

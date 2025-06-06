@@ -5,6 +5,7 @@ class Donation {
   final int amount;
   final String time;
   final String paymentMethod;
+  final bool isAnonim; // <--- tambah ini
 
   Donation({
     this.id,
@@ -13,6 +14,7 @@ class Donation {
     required this.amount,
     required this.time,
     required this.paymentMethod,
+    this.isAnonim = false, // <--- default false
   });
 
   Map<String, dynamic> toMap() => {
@@ -22,6 +24,7 @@ class Donation {
     'amount': amount,
     'time': time,
     'paymentMethod': paymentMethod,
+    'isAnonim': isAnonim ? 1 : 0, // <--- map bool ke int
   };
 
   factory Donation.fromMap(Map<String, dynamic> map) => Donation(
@@ -30,6 +33,7 @@ class Donation {
     name: map['name'],
     amount: map['amount'],
     time: map['time'],
-    paymentMethod: map['paymentMethod'] ?? '', 
+    paymentMethod: map['paymentMethod'] ?? '',
+    isAnonim: (map['isAnonim'] ?? 0) == 1, // <--- dari int ke bool
   );
 }

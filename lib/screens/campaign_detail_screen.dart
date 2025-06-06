@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/campaign.dart';
 import '../models/donation.dart';
 import '../models/doa.dart';
@@ -126,6 +127,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                             nominal,
                             _nameController.text.trim(),
                             _doaController.text.trim(),
+                            isAnonim,
                           );
                         }
                       },
@@ -142,7 +144,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     );
   }
 
-  void _showPaymentMethodDialog(BuildContext context, int nominal, String donorName, String doaMsg) {
+  void _showPaymentMethodDialog(BuildContext context, int nominal, String donorName, String doaMsg, bool isAnonim) {
     List<String> metode = [
       "QRIS", "ShopeePay", "DANA", "GoPay", "VA BCA", "VA BRI", "VA Mandiri"
     ];
@@ -164,18 +166,22 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                 leading: Icon(Icons.payment),
                 title: Text(m),
                 onTap: () async {
+                  // Ambil username login
+                  final prefs = await SharedPreferences.getInstance();
+                  final username = prefs.getString('username') ?? donorName;
                   final donation = Donation(
                     campaignId: widget.campaign.id!,
-                    name: donorName,
+                    name: username, // Selalu username login
                     amount: nominal,
                     time: DateTime.now().toString(),
                     paymentMethod: m,
+                    isAnonim: isAnonim, // Simpan status anonim
                   );
                   await CampaignDatabase.instance.insertDonation(donation);
                   if (doaMsg.isNotEmpty) {
                     final doa = Doa(
                       campaignId: widget.campaign.id!,
-                      name: donorName,
+                      name: isAnonim ? "Orang Baik" : username,
                       message: doaMsg,
                       time: DateTime.now().toString(),
                     );
@@ -315,11 +321,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                                 widget.campaign.creator,
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              // SizedBox(width: 6),
-                              // Icon(Icons.verified, color: Colors.blue, size: 16),
                             ],
                           ),
-                          // Text("Identitas terverifikasi", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                         ],
                       )
                     ],
@@ -352,7 +355,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   SizedBox(height: 6),
                   Text("${(_percent * 100).toStringAsFixed(1)}%", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                   SizedBox(height: 12),
-                  // Bagian info donasi yang sebelumnya expandable DIHAPUS
                   Container(
                     margin: EdgeInsets.only(top: 12),
                     padding: EdgeInsets.all(10),
@@ -497,7 +499,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               margin: EdgeInsets.symmetric(vertical: 4),
               child: ListTile(
                 leading: Icon(Icons.account_circle, size: 40),
-                title: Text(donation.name),
+                title: Text(donation.isAnonim ? "Orang Baik" : donation.name),
                 subtitle: Text(
                   "Donasi sebesar Rp${_formatRupiah(donation.amount)}\n"
                   "Via: ${donation.paymentMethod}\n"
