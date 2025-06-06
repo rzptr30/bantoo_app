@@ -20,6 +20,17 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   List<Doa> _doas = [];
   bool _loading = true;
 
+  // Mapping metode ke icon asset
+  final Map<String, String> metodeIcons = {
+    "QRIS": "assets/icons/qris.png",
+    "ShopeePay": "assets/icons/shopeepay.png",
+    "DANA": "assets/icons/dana.png",
+    "GoPay": "assets/icons/gopay.png",
+    "VA BCA": "assets/icons/bca.png",
+    "VA BRI": "assets/icons/bri.png",
+    "VA Mandiri": "assets/icons/mandiri.png",
+  };
+
   int get _totalTerkumpul => _donations.fold(0, (sum, d) => sum + d.amount);
   int get _targetFund => widget.campaign.targetFund;
   double get _percent => _targetFund > 0 ? (_totalTerkumpul / _targetFund).clamp(0.0, 1.0) : 0.0;
@@ -163,7 +174,13 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               Text("Pilih Metode Pembayaran", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               SizedBox(height: 14),
               ...metode.map((m) => ListTile(
-                leading: Icon(Icons.payment),
+                leading: Image.asset(
+                  metodeIcons[m] ?? 'assets/icons/qris.png',
+                  width: 32,
+                  height: 32,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.payment),
+                ),
                 title: Text(m),
                 onTap: () async {
                   // Ambil username login
