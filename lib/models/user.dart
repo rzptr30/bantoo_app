@@ -1,10 +1,11 @@
 class User {
   final int? id;
-  String username;
-  String email;
-  String password;
-  String? phone;
-  String? country;
+  final String username;
+  final String email;
+  final String password;
+  final String? phone;
+  final String? country;
+  final String? avatarAsset; // Tambahkan ini!
 
   User({
     this.id,
@@ -13,9 +14,21 @@ class User {
     required this.password,
     this.phone,
     this.country,
+    this.avatarAsset, // Tambahkan ini!
   });
 
-  // Convert User object to Map for SQLite
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'],
+      username: map['username'],
+      email: map['email'],
+      password: map['password'],
+      phone: map['phone'],
+      country: map['country'],
+      avatarAsset: map['avatarAsset'], // Tambahkan ini!
+    );
+  }
+
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
       'username': username,
@@ -23,20 +36,9 @@ class User {
       'password': password,
       'phone': phone,
       'country': country,
+      'avatarAsset': avatarAsset, // Tambahkan ini!
     };
     if (id != null) map['id'] = id;
     return map;
-  }
-
-  // Create User object from Map (from SQLite)
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      id: map['id'] as int?,
-      username: map['username'] as String,
-      email: map['email'] as String,
-      password: map['password'] as String,
-      phone: map['phone'] as String?,
-      country: map['country'] as String?,
-    );
   }
 }

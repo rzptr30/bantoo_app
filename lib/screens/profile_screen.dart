@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'login_screen.dart';
 import 'user_info_screen.dart';
 import 'user_campaign_archive_screen.dart';
 import 'transaction_history_screen.dart';
-import '../db/campaign_database.dart'; // Tambahan import
+import '../db/campaign_database.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -37,7 +37,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => UserCampaignArchiveScreen(username: widget.username)),
+              builder: (_) => UserCampaignArchiveScreen(username: widget.username),
+            ),
           );
         },
       },
@@ -83,7 +84,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'icon': Icons.delete_forever,
         'label': 'Reset Database Donasi',
         'onTap': () async {
-          // Tampilkan dialog konfirmasi sebelum menghapus
           final confirm = await showDialog(
             context: context,
             builder: (_) => AlertDialog(
@@ -103,10 +103,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
           if (confirm == true) {
             await CampaignDatabase.instance.deleteAllCampaignRelated();
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Semua data campaign, donasi, doa berhasil dihapus!\nData user tetap aman.')),
-            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Semua data campaign, donasi, doa berhasil dihapus!\nData user tetap aman.')),
+              );
+            }
           }
         },
       },
@@ -115,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'label': 'Logout',
         'onTap': () async {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.clear(); // Hapus semua data login
+          await prefs.clear();
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => LoginScreen()),
@@ -129,7 +130,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Profile")),
+      // AppBar tetap ada, JUDUL Profile cukup di sini saja; tidak perlu judul Profile lagi di body!
+      // appBar: AppBar(title: Text("Profile")),
       body: ListView.builder(
         itemCount: _menuItems.length,
         itemBuilder: (context, index) {

@@ -6,7 +6,7 @@ import 'notification_screen.dart';
 import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 import 'admin_campaign_approval_screen.dart';
-import 'request_campaign_screen.dart'; // Tambahkan import ini
+import 'request_campaign_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -49,51 +49,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: Colors.white,
-              child: Image.asset('assets/dashboard_avatar.png', width: 32),
+          if (_selectedIndex != 3)
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
+              child: CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.white,
+                child: Image.asset('assets/dashboard_avatar.png', width: 32),
+              ),
             ),
-          ),
         ],
       ),
-      body: _selectedIndex == 0
-          ? _DashboardHome(
-              username: widget.username,
-              emergencyKey: _emergencyKey,
-              role: widget.role,
-            )
-          : _selectedIndex == 2
-              ? NotificationScreen(username: widget.username)
-              : _selectedIndex == 3
-                  ? ProfileScreen(
-                      username: widget.username,
-                      email: '', // Isi dengan email user jika ada
-                      role: widget.role,
-                      avatarAsset: "assets/images/default_avatar.png",
-                    )
-                  : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
-      floatingActionButton: (_selectedIndex == 0 && widget.role != "admin")
-          ? FloatingActionButton(
-              backgroundColor: Color(0xFF222E3A),
-              child: Icon(Icons.add),
-              onPressed: () async {
-                // Ganti: buka RequestCampaignScreen dulu, bukan langsung AddCampaignScreen
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RequestCampaignScreen(creator: widget.username),
-                  ),
-                );
-                if (result == true) {
-                  _emergencyKey.currentState?.refreshCampaigns();
-                }
-              },
-              tooltip: "Buat Campaign",
-            )
-          : null,
+      body: Stack(
+        children: [
+          // Main content scrollable
+          Positioned.fill(
+            child: _selectedIndex == 0
+                ? _DashboardHome(
+                    username: widget.username,
+                    emergencyKey: _emergencyKey,
+                    role: widget.role,
+                  )
+                : _selectedIndex == 2
+                    ? NotificationScreen(username: widget.username)
+                    : _selectedIndex == 3
+                        ? ProfileScreen(
+                            username: widget.username,
+                            email: '',
+                            role: widget.role,
+                            avatarAsset: "assets/images/default_avatar.png",
+                          )
+                        : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
+          ),
+          // Card Bantoo Campaign hanya di dashboard (index 0)
+          if (_selectedIndex == 0)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 16 + 64, // 16px margin + bottom nav height
+              child: Center(
+                child: _BantooCampaignCard(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RequestCampaignScreen(creator: widget.username),
+                      ),
+                    );
+                    if (result == true) {
+                      _emergencyKey.currentState?.refreshCampaigns();
+                    }
+                  },
+                ),
+              ),
+            ),
+        ],
+      ),
+      // FloatingActionButton dihilangkan
+      floatingActionButton: null,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFF222E3A),
         selectedItemColor: Color(0xFF222E3A),
@@ -128,17 +141,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ------------------------------
-// _DashboardHome
-// ------------------------------
-
 class _DashboardHome extends StatelessWidget {
   final String username;
   final String role;
   final GlobalKey<EmergencyBantooSectionState> emergencyKey;
   const _DashboardHome({required this.username, required this.emergencyKey, required this.role});
 
-  // Section Pending Approval (hanya admin)
   Widget _pendingCampaignSection(BuildContext context) {
     return FutureBuilder<List<Campaign>>(
       future: CampaignDatabase.instance.getCampaignsByStatus("pending"),
@@ -180,7 +188,9 @@ class _DashboardHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tambahkan extra padding bawah agar konten tidak ketutupan card & nav
     return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 180),
       child: Column(
         children: [
           // HEADER
@@ -232,12 +242,54 @@ class _DashboardHome extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16),
-          // Section Pending Approval (khusus admin)
           if (role == "admin") _pendingCampaignSection(context),
-          // Emergency Bantoo Section (hanya tampilkan campaign approved untuk admin)
           EmergencyBantooSection(key: emergencyKey, role: role, username: username),
           SizedBox(height: 36),
         ],
+      ),
+    );
+  }
+}
+
+// Widget untuk card BANTOO CAMPAIGN di dashboard bawah
+class _BantooCampaignCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _BantooCampaignCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        color: Colors.grey[700],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        margin: EdgeInsets.symmetric(horizontal: 26),
+        elevation: 8,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "BANTOO CAMPAIGN",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white, letterSpacing: 2),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 14),
+              Text(
+                "This programme aims to have users report to us if there are disasters, circumstances, or people who may not be publicly known and need help.",
+                style: TextStyle(color: Colors.white, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16),
+              Text(
+                '"YOU DON’T NEED MONEY TO HELP OTHERS, YOU JUST NEED A HEART TO HELP THEM"',
+                style: TextStyle(color: Colors.white60, fontSize: 12, fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
