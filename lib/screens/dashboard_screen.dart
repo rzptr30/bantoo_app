@@ -7,6 +7,7 @@ import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 import 'admin_campaign_approval_screen.dart';
 import 'request_campaign_screen.dart';
+import '../widgets/bantoo_campaign_card.dart'; // Tambahkan import ini
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -88,7 +89,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               right: 0,
               bottom: 16 + 64, // 16px margin + bottom nav height
               child: Center(
-                child: _BantooCampaignCard(
+                child: BantooCampaignCard(
                   onTap: () async {
                     final result = await Navigator.push(
                       context,
@@ -246,50 +247,6 @@ class _DashboardHome extends StatelessWidget {
           EmergencyBantooSection(key: emergencyKey, role: role, username: username),
           SizedBox(height: 36),
         ],
-      ),
-    );
-  }
-}
-
-// Widget untuk card BANTOO CAMPAIGN di dashboard bawah
-class _BantooCampaignCard extends StatelessWidget {
-  final VoidCallback onTap;
-  const _BantooCampaignCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        color: Colors.grey[700],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        margin: EdgeInsets.symmetric(horizontal: 26),
-        elevation: 8,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "BANTOO CAMPAIGN",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white, letterSpacing: 2),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 14),
-              Text(
-                "This programme aims to have users report to us if there are disasters, circumstances, or people who may not be publicly known and need help.",
-                style: TextStyle(color: Colors.white, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 16),
-              Text(
-                '"YOU DON’T NEED MONEY TO HELP OTHERS, YOU JUST NEED A HEART TO HELP THEM"',
-                style: TextStyle(color: Colors.white60, fontSize: 12, fontStyle: FontStyle.italic),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../db/user_database.dart';
 import '../models/user.dart';
-import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
