@@ -24,25 +24,21 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
   DateTime? _endDate;
   File? _imageFile;
 
-  /// Ganti parameter cropStyle, aspectRatio sesuai kebutuhan frame!
-  Future<void> _pickAndCropImage({
-    CropStyle cropStyle = CropStyle.rectangle,
-    CropAspectRatio? aspectRatio,
-  }) async {
+  Future<void> _pickAndCropImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
       final cropped = await ImageCropper().cropImage(
         sourcePath: picked.path,
-        aspectRatio: aspectRatio ?? const CropAspectRatio(ratioX: 16, ratioY: 9),
+        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Crop Gambar',
             hideBottomControls: true,
-            lockAspectRatio: false,
+            lockAspectRatio: true, // lock agar pasti 16:9
           ),
           IOSUiSettings(
             title: 'Crop Gambar',
-            aspectRatioLockEnabled: false,
+            aspectRatioLockEnabled: true,
           ),
         ],
       );
@@ -136,31 +132,22 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
               ),
               SizedBox(height: 12),
               _imageFile != null
-                  ? Image.file(_imageFile!, height: 100)
+                  ? AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.file(_imageFile!, fit: BoxFit.cover),
+                      ),
+                    )
                   : Text("Belum ada gambar"),
-              // Contoh penggunaan: crop kotak
-              TextButton(
-                onPressed: () => _pickAndCropImage(
-                  cropStyle: CropStyle.rectangle,
-                  aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+              SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: _pickAndCropImage,
+                icon: Icon(Icons.photo),
+                label: Text("Pilih & Crop Gambar (16:9)"),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                 ),
-                child: Text("Pilih & Crop Gambar Kotak"),
-              ),
-              // Crop bulat (opsional, bisa dihapus jika tidak perlu)
-              TextButton(
-                onPressed: () => _pickAndCropImage(
-                  cropStyle: CropStyle.circle,
-                  aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-                ),
-                child: Text("Pilih & Crop Gambar Bulat"),
-              ),
-              // Crop rasio 16:9 (opsional)
-              TextButton(
-                onPressed: () => _pickAndCropImage(
-                  cropStyle: CropStyle.rectangle,
-                  aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-                ),
-                child: Text("Pilih & Crop Gambar 16:9"),
               ),
               SizedBox(height: 20),
               ElevatedButton(

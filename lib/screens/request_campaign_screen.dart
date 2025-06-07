@@ -26,7 +26,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
     if (picked != null) {
       final cropped = await ImageCropper().cropImage(
         sourcePath: picked.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // square
+        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9), // square
         compressQuality: 90,
         uiSettings: [
           AndroidUiSettings(

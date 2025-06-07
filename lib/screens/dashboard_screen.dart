@@ -39,6 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: Color(0xFFEFF3F6),
       appBar: AppBar(
+          automaticallyImplyLeading: false, // <-- Tambahkan baris ini!
         backgroundColor: Color(0xFFEFF3F6),
         elevation: 0,
         title: Text(
