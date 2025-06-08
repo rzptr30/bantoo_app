@@ -130,9 +130,20 @@ class CampaignDatabase {
     return result.map((map) => Campaign.fromMap(map)).toList();
   }
 
+  Future<List<Campaign>> getPendingCampaigns() async {
+    final db = await instance.database;
+    final result = await db.query('campaigns', where: 'status = ?', whereArgs: ['pending'], orderBy: 'id DESC');
+    return result.map((map) => Campaign.fromMap(map)).toList();
+  }
+
   Future<int> updateCampaignStatus(int id, String status) async {
     final db = await instance.database;
     return await db.update('campaigns', {'status': status}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Alias agar bisa dipanggil sebagai updateStatus juga
+  Future<int> updateStatus(int id, String status) async {
+    return await updateCampaignStatus(id, status);
   }
 
   Future<int> updateCampaign(Campaign campaign) async {

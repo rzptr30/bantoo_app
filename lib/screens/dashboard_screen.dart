@@ -6,7 +6,7 @@ import 'notification_screen.dart';
 import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 import 'admin_campaign_approval_screen.dart';
-import 'request_campaign_screen2.dart';
+import 'request_campaign_screen.dart';
 import '../widgets/bantoo_campaign_card.dart';
 import '../widgets/volunteer_horizontal_list.dart';
 import '../models/volunteer.dart';
@@ -37,12 +37,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _selectedIndex == 0 ? "Dashboard" : _navItems[_selectedIndex]['label'];
   }
 
+  void _showCampaignSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Pilih Jenis Campaign'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              icon: Icon(Icons.attach_money),
+              label: Text('Donasi'),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RequestCampaignScreen(creator: widget.username),
+                  ),
+                ).then((result) {
+                  if (result == true) {
+                    _emergencyKey.currentState?.refreshCampaigns();
+                  }
+                });
+              },
+            ),
+            SizedBox(height: 16),
+            ElevatedButton.icon(
+              icon: Icon(Icons.volunteer_activism),
+              label: Text('Volunteer'),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RequestCampaignScreen(creator: widget.username),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFEFF3F6),
       appBar: AppBar(
-          automaticallyImplyLeading: false, // <-- Tambahkan baris ini!
+        automaticallyImplyLeading: false,
         backgroundColor: Color(0xFFEFF3F6),
         elevation: 0,
         title: Text(
@@ -67,7 +112,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: Stack(
         children: [
-          // Main content scrollable
           Positioned.fill(
             child: _selectedIndex == 0
                 ? _DashboardHome(
@@ -86,31 +130,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           )
                         : VolunteerScreen(),
           ),
-          // Card Bantoo Campaign hanya di dashboard (index 0)
           if (_selectedIndex == 0)
             Positioned(
               left: 0,
               right: 0,
-              bottom: 16 + 64, // 16px margin + bottom nav height
+              bottom: 16 + 64,
               child: Center(
                 child: BantooCampaignCard(
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RequestCampaignScreen(creator: widget.username),
-                      ),
-                    );
-                    if (result == true) {
-                      _emergencyKey.currentState?.refreshCampaigns();
-                    }
+                  onTap: () {
+                    _showCampaignSelectionDialog(context);
                   },
                 ),
               ),
             ),
         ],
       ),
-      // FloatingActionButton dihilangkan
       floatingActionButton: null,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFF222E3A),
@@ -193,12 +227,10 @@ class _DashboardHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Tambahkan extra padding bawah agar konten tidak ketutupan card & nav
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 180),
       child: Column(
         children: [
-          // HEADER
           Container(
             margin: EdgeInsets.all(16),
             padding: EdgeInsets.all(18),
@@ -230,7 +262,6 @@ class _DashboardHome extends StatelessWidget {
               ],
             ),
           ),
-          // SEARCH BAR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TextField(

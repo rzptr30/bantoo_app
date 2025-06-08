@@ -1,9 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../db/campaign_database.dart';
+import '../db/volunteer_campaign_database.dart';
 import '../models/campaign.dart';
-import '../db/notification_database.dart';
-import '../models/notification_item.dart';
-import 'admin_campaign_detail_screen.dart'; // Tambahkan import ini
+import '../models/volunteer_campaign.dart';
 
 class AdminCampaignApprovalScreen extends StatefulWidget {
   @override
@@ -11,107 +11,367 @@ class AdminCampaignApprovalScreen extends StatefulWidget {
 }
 
 class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScreen> {
-  late Future<List<Campaign>> _allCampaignsFuture;
+  List<_PendingCampaign> _allPendingCampaigns = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAllCampaigns();
+    _fetchPendingCampaigns();
   }
 
-  void _loadAllCampaigns() {
-    _allCampaignsFuture = CampaignDatabase.instance.getAllCampaigns();
-  }
+  Future<void> _fetchPendingCampaigns() async {
+    setState(() => _isLoading = true);
 
-  void _refresh() {
+    // Fetch pending donasi campaigns
+    final donasiList = await CampaignDatabase.instance.getPendingCampaigns();
+    final donasiWrapped = donasiList.map((c) => _PendingCampaign.donasi(c)).toList();
+
+    // Fetch pending volunteer campaigns
+    final volunteerList = await VolunteerCampaignDatabase.instance.getPendingCampaigns();
+    final volunteerWrapped = volunteerList.map((v) => _PendingCampaign.volunteer(v)).toList();
+
+    // Gabungkan dan urutkan berdasarkan tanggal dibuat (paling baru di atas)
+    final all = [...donasiWrapped, ...volunteerWrapped];
+    all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     setState(() {
-      _loadAllCampaigns();
+      _allPendingCampaigns = all;
+      _isLoading = false;
     });
   }
 
-  Future<void> _approveCampaign(Campaign c) async {
-    await CampaignDatabase.instance.updateCampaignStatus(c.id!, "approved");
-    await NotificationDatabase.instance.insertNotification(NotificationItem(
-      user: c.creator,
-      message: 'Campaign "${c.title}" kamu telah DISETUJUI Admin!',
-      date: DateTime.now(),
-    ));
-    _refresh();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Campaign "${c.title}" di-ACC!')));
+  Future<void> _handleApproval(_PendingCampaign campaign, bool isApprove) async {
+    if (campaign.isDonasi) {
+      await CampaignDatabase.instance.updateStatus(campaign.donasi!.id!, isApprove ? 'approved' : 'rejected');
+    } else {
+      await VolunteerCampaignDatabase.instance.updateStatus(campaign.volunteer!.id!, isApprove ? 'approved' : 'rejected');
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(isApprove ? "Campaign di-approve!" : "Campaign di-reject!")),
+    );
+    await _fetchPendingCampaigns();
   }
 
-  Future<void> _rejectCampaign(Campaign c) async {
-    await CampaignDatabase.instance.updateCampaignStatus(c.id!, "rejected");
-    await NotificationDatabase.instance.insertNotification(NotificationItem(
-      user: c.creator,
-      message: 'Campaign "${c.title}" kamu DITOLAK Admin.',
-      date: DateTime.now(),
-    ));
-    _refresh();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Campaign "${c.title}" ditolak!')));
+  void _showDetailDialog(_PendingCampaign campaign) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        if (campaign.isDonasi) {
+          final Campaign data = campaign.donasi!;
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text('Donasi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Text(data.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  SizedBox(height: 8),
+                  Text("Oleh: ${data.creator}", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                  SizedBox(height: 16),
+                  if (data.imagePath.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(data.imagePath),
+                        width: double.infinity,
+                        height: 180,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  SizedBox(height: 14),
+                  Text(data.description),
+                  SizedBox(height: 14),
+                  Divider(),
+                  Text('Target Donasi: Rp ${data.targetFund}'),
+                  SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        icon: Icon(Icons.close, color: Colors.red),
+                        label: Text('Reject', style: TextStyle(color: Colors.red)),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _handleApproval(campaign, false);
+                        },
+                      ),
+                      SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.check, color: Colors.white),
+                        label: Text('Approve'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _handleApproval(campaign, true);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          final VolunteerCampaign data = campaign.volunteer!;
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text('Volunteer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Text(data.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  SizedBox(height: 8),
+                  Text("Oleh: ${data.creator}  |  ${_formatDate(data.createdAt)}", style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                  SizedBox(height: 16),
+                  if (data.imagePath.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(data.imagePath),
+                        width: double.infinity,
+                        height: 180,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  SizedBox(height: 14),
+                  Text(data.description),
+                  SizedBox(height: 14),
+                  Divider(),
+                  Text('Lokasi: ${data.location}'),
+                  Text('Tanggal: ${_formatDate(data.eventDate)}'),
+                  Text('Kuota: ${data.quota}'),
+                  Text('Biaya: ${data.fee}'),
+                  SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        icon: Icon(Icons.close, color: Colors.red),
+                        label: Text('Reject', style: TextStyle(color: Colors.red)),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _handleApproval(campaign, false);
+                        },
+                      ),
+                      SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.check, color: Colors.white),
+                        label: Text('Approve'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _handleApproval(campaign, true);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("ACC Campaign (Admin)")),
-      body: FutureBuilder<List<Campaign>>(
-        future: _allCampaignsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text(
-                "Belum ada campaign yang diajukan.",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            );
-          }
-          final campaigns = snapshot.data!;
-          return ListView.builder(
-            itemCount: campaigns.length,
-            itemBuilder: (context, i) {
-              final c = campaigns[i];
-              return Card(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  title: Text(c.title),
-                  subtitle: Text("Oleh: ${c.creator}\nTarget: Rp${c.targetFund}\nStatus: ${c.status}"),
-                  isThreeLine: true,
-                  onTap: () {
-                    // Navigasi ke halaman detail campaign
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AdminCampaignDetailScreen(campaign: c),
-                      ),
-                    );
+      appBar: AppBar(
+        title: Text('Approval Campaign'),
+      ),
+      backgroundColor: Color(0xFFEFF3F6),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _allPendingCampaigns.isEmpty
+              ? Center(child: Text('Tidak ada campaign yang perlu di-approve.'))
+              : ListView.builder(
+                  padding: EdgeInsets.all(16),
+                  itemCount: _allPendingCampaigns.length,
+                  itemBuilder: (context, idx) {
+                    final campaign = _allPendingCampaigns[idx];
+                    if (campaign.isDonasi) {
+                      final Campaign c = campaign.donasi!;
+                      return _buildCard(
+                        labelColor: Colors.blue,
+                        label: "Donasi",
+                        title: c.title,
+                        creator: c.creator,
+                        date: null,
+                        description: c.description,
+                        imagePath: c.imagePath,
+                        extra: "Target Donasi: Rp ${c.targetFund}",
+                        onDetail: () => _showDetailDialog(campaign),
+                        onReject: () => _handleApproval(campaign, false),
+                        onApprove: () => _handleApproval(campaign, true),
+                      );
+                    } else {
+                      final VolunteerCampaign v = campaign.volunteer!;
+                      return _buildCard(
+                        labelColor: Colors.orange,
+                        label: "Volunteer",
+                        title: v.title,
+                        creator: v.creator,
+                        date: v.createdAt,
+                        description: v.description,
+                        imagePath: v.imagePath,
+                        extra: "Lokasi: ${v.location}, Kuota: ${v.quota}, Biaya: ${v.fee}",
+                        onDetail: () => _showDetailDialog(campaign),
+                        onReject: () => _handleApproval(campaign, false),
+                        onApprove: () => _handleApproval(campaign, true),
+                      );
+                    }
                   },
-                  trailing: c.status == "pending"
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.check, color: Colors.green),
-                              tooltip: "ACC",
-                              onPressed: () => _approveCampaign(c),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.close, color: Colors.red),
-                              tooltip: "Tolak",
-                              onPressed: () => _rejectCampaign(c),
-                            ),
-                          ],
-                        )
-                      : null,
                 ),
-              );
-            },
-          );
-        },
+    );
+  }
+
+  Widget _buildCard({
+    required Color labelColor,
+    required String label,
+    required String title,
+    required String creator,
+    DateTime? date,
+    required String description,
+    required String imagePath,
+    required String extra,
+    required VoidCallback onDetail,
+    required VoidCallback onReject,
+    required VoidCallback onApprove,
+  }) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: labelColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(label, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            SizedBox(height: 6),
+            Text(
+              "Oleh: $creator${date != null ? ' | ${_formatDate(date)}' : ''}",
+              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+            ),
+            SizedBox(height: 8),
+            Text(
+              description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (imagePath.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(imagePath),
+                    width: double.infinity,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            Text(extra),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: onDetail,
+                  child: Text("Lihat Detail"),
+                ),
+                SizedBox(width: 8),
+                TextButton.icon(
+                  icon: Icon(Icons.close, color: Colors.red),
+                  label: Text('Reject', style: TextStyle(color: Colors.red)),
+                  onPressed: onReject,
+                ),
+                SizedBox(width: 8),
+                ElevatedButton.icon(
+                  icon: Icon(Icons.check, color: Colors.white),
+                  label: Text('Approve'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: onApprove,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return "-";
+    return "${dt.day}/${dt.month}/${dt.year}";
+  }
+}
+
+/// Helper class: membungkus campaign donasi/volunteer jadi satu tipe
+class _PendingCampaign {
+  final Campaign? donasi;
+  final VolunteerCampaign? volunteer;
+
+  _PendingCampaign.donasi(this.donasi)
+      : volunteer = null;
+  _PendingCampaign.volunteer(this.volunteer)
+      : donasi = null;
+
+  bool get isDonasi => donasi != null;
+  bool get isVolunteer => volunteer != null;
+
+  // Untuk sorting, volunteer pakai createdAt, donasi pakai id (descending)
+  DateTime get createdAt => isDonasi
+      ? DateTime.now() // fallback jika campaign donasi tidak punya createdAt, sesuaikan jika ada
+      : volunteer!.createdAt;
 }
