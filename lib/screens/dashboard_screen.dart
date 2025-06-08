@@ -7,7 +7,10 @@ import '../db/campaign_database.dart';
 import '../models/campaign.dart';
 import 'admin_campaign_approval_screen.dart';
 import 'request_campaign_screen2.dart';
-import '../widgets/bantoo_campaign_card.dart'; // Tambahkan import ini
+import '../widgets/bantoo_campaign_card.dart';
+import '../widgets/volunteer_horizontal_list.dart';
+import '../models/volunteer.dart';
+import 'volunteer_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -81,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             role: widget.role,
                             avatarAsset: "assets/images/default_avatar.png",
                           )
-                        : Center(child: Text(_navItems[_selectedIndex]['label'] + " Page")),
+                        : VolunteerScreen(),
           ),
           // Card Bantoo Campaign hanya di dashboard (index 0)
           if (_selectedIndex == 0)
