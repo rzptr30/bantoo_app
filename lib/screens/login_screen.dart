@@ -14,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _controllerPass = TextEditingController();
   String _error = '';
   bool _isLoading = false;
+  bool _showPassword = false; // Untuk toggle mata
 
   Future<void> _login() async {
     setState(() {
@@ -57,8 +58,8 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(
             builder: (_) => DashboardScreen(
-                  username: username!, // <-- FIX pakai ! di sini
-                  role: role!,         // <-- FIX pakai ! di sini
+                  username: username!,
+                  role: role!,
                 )),
       );
     } else {
@@ -96,10 +97,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 16),
                   TextField(
                     controller: _controllerPass,
-                    obscureText: true,
+                    obscureText: !_showPassword,
                     decoration: InputDecoration(
                       labelText: "Password",
                       prefixIcon: Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            _showPassword = !_showPassword;
+                          });
+                        },
+                      ),
                     ),
                   ),
                   Align(

@@ -29,7 +29,7 @@ class BantooCampaignCard extends StatelessWidget {
                   // Background Image
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/images/bantoo_hands.jpg',
+                      'assets/bantoo_hands.png',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey.shade300,

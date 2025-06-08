@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 class RequestCampaignScreen extends StatefulWidget {
   final String creator;
@@ -21,29 +23,40 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   bool _isSubmitting = false;
 
   Future<void> _pickAndCropImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      final cropped = await ImageCropper().cropImage(
-        sourcePath: picked.path,
-        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9), // square
-        compressQuality: 90,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Gambar',
-            hideBottomControls: true,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Crop Gambar',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-      );
-      if (cropped != null) {
-        setState(() {
-          _selectedImage = File(cropped.path);
-        });
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        final cropped = await ImageCropper().cropImage(
+          sourcePath: picked.path,
+          aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+          compressQuality: 90,
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Gambar',
+              hideBottomControls: true,
+              lockAspectRatio: true,
+            ),
+            IOSUiSettings(
+              title: 'Crop Gambar',
+              aspectRatioLockEnabled: true,
+            ),
+          ],
+        );
+        if (cropped != null) {
+          final dir = await getApplicationDocumentsDirectory();
+          final name = basename(cropped.path);
+          final savedImage = await File(cropped.path).copy('${dir.path}/$name');
+          setState(() {
+            _selectedImage = savedImage;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          SnackBar(content: Text('Gagal memilih/crop gambar: $e')),
+        );
       }
     }
   }
@@ -51,7 +64,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   Future<void> _selectDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
-      context: context,
+      context: this.context,
       initialDate: now,
       firstDate: now,
       lastDate: now.add(Duration(days: 365)),
@@ -69,7 +82,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         _targetController.text.isEmpty ||
         _selectedDate == null ||
         _selectedImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(content: Text('Semua field harus diisi!')),
       );
       return;
@@ -79,10 +92,30 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
     // TODO: simpan ke database
 
     setState(() => _isSubmitting = false);
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(this.context).showSnackBar(
       SnackBar(content: Text('Campaign berhasil diajukan!')),
     );
-    Navigator.pop(context, true);
+    Navigator.pop(this.context, true);
+  }
+
+  Widget _buildImagePreview() {
+    if (_selectedImage != null) {
+      if (_selectedImage!.existsSync()) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.file(
+            _selectedImage!,
+            width: 180,
+            height: 180,
+            fit: BoxFit.cover,
+          ),
+        );
+      } else {
+        return Text("File gambar tidak ditemukan", style: TextStyle(color: Colors.red));
+      }
+    } else {
+      return Text("Belum ada gambar", style: TextStyle(color: Colors.grey));
+    }
   }
 
   @override
@@ -137,19 +170,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
             // Gambar Campaign
             Text("Gambar Campaign", style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 12),
-            Center(
-              child: _selectedImage == null
-                  ? Text("Belum ada gambar", style: TextStyle(color: Colors.grey))
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.file(
-                        _selectedImage!,
-                        width: 180,
-                        height: 180,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-            ),
+            Center(child: _buildImagePreview()),
             SizedBox(height: 12),
             Center(
               child: ElevatedButton.icon(
