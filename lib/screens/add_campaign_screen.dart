@@ -25,30 +25,38 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
   File? _imageFile;
 
   Future<void> _pickAndCropImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      final cropped = await ImageCropper().cropImage(
-        sourcePath: picked.path,
-        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Gambar',
-            hideBottomControls: true,
-            lockAspectRatio: true, // lock agar pasti 16:9
-          ),
-          IOSUiSettings(
-            title: 'Crop Gambar',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-      );
-      if (cropped != null) {
-        final dir = await getApplicationDocumentsDirectory();
-        final name = basename(cropped.path);
-        final savedImage = await File(cropped.path).copy('${dir.path}/$name');
-        setState(() {
-          _imageFile = savedImage;
-        });
+    try {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        final cropped = await ImageCropper().cropImage(
+          sourcePath: picked.path,
+          aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Gambar',
+              hideBottomControls: true,
+              lockAspectRatio: true, // lock agar pasti 16:9
+            ),
+            IOSUiSettings(
+              title: 'Crop Gambar',
+              aspectRatioLockEnabled: true,
+            ),
+          ],
+        );
+        if (cropped != null) {
+          final dir = await getApplicationDocumentsDirectory();
+          final name = basename(cropped.path);
+          final savedImage = await File(cropped.path).copy('${dir.path}/$name');
+          setState(() {
+            _imageFile = savedImage;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          SnackBar(content: Text('Gagal memilih/crop gambar: $e')),
+        );
       }
     }
   }
@@ -85,6 +93,25 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
       SnackBar(content: Text('Campaign berhasil diajukan! Menunggu ACC Admin.'))
     );
     Navigator.pop(this.context, true);
+  }
+
+  Widget _buildImagePreview() {
+    if (_imageFile != null) {
+      // Pastikan file memang ada
+      if (_imageFile!.existsSync()) {
+        return AspectRatio(
+          aspectRatio: 16 / 9,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.file(_imageFile!, fit: BoxFit.cover),
+          ),
+        );
+      } else {
+        return Text("File gambar tidak ditemukan", style: TextStyle(color: Colors.red));
+      }
+    } else {
+      return Text("Belum ada gambar");
+    }
   }
 
   @override
@@ -131,15 +158,7 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
                 ],
               ),
               SizedBox(height: 12),
-              _imageFile != null
-                  ? AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(_imageFile!, fit: BoxFit.cover),
-                      ),
-                    )
-                  : Text("Belum ada gambar"),
+              _buildImagePreview(),
               SizedBox(height: 8),
               ElevatedButton.icon(
                 onPressed: _pickAndCropImage,
