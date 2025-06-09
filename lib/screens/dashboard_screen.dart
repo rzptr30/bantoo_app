@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'add_campaign_screen.dart';
 import 'dashboard_emergency_section.dart';
 import 'profile_screen.dart';
@@ -8,8 +9,11 @@ import '../models/campaign.dart';
 import 'admin_campaign_approval_screen.dart';
 import 'request_campaign_screen.dart';
 import '../widgets/bantoo_campaign_card.dart';
-import '../widgets/volunteer_horizontal_list.dart';
-import '../models/volunteer.dart';
+import '../widgets/volunteer_campaign_horizontal_card.dart';
+import '../models/volunteer_campaign.dart';
+import '../db/volunteer_campaign_database.dart';
+import 'campaign_detail_screen.dart';
+import 'volunteer_campaign_detail_screen.dart';
 import 'volunteer_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -118,6 +122,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     username: widget.username,
                     emergencyKey: _emergencyKey,
                     role: widget.role,
+                    showCampaignSelectionDialog: _showCampaignSelectionDialog,
                   )
                 : _selectedIndex == 2
                     ? NotificationScreen(username: widget.username)
@@ -180,11 +185,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _DashboardHome extends StatelessWidget {
+class _DashboardHome extends StatefulWidget {
   final String username;
   final String role;
   final GlobalKey<EmergencyBantooSectionState> emergencyKey;
-  const _DashboardHome({required this.username, required this.emergencyKey, required this.role});
+  final Function(BuildContext) showCampaignSelectionDialog;
+  const _DashboardHome({
+    required this.username,
+    required this.emergencyKey,
+    required this.role,
+    required this.showCampaignSelectionDialog,
+  });
+
+  @override
+  State<_DashboardHome> createState() => __DashboardHomeState();
+}
+
+class __DashboardHomeState extends State<_DashboardHome> {
+  late Future<List<Campaign>> _donasiApprovedFuture;
+  late Future<List<VolunteerCampaign>> _volunteerApprovedFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _donasiApprovedFuture = CampaignDatabase.instance.getCampaignsByStatus('approved');
+    _volunteerApprovedFuture = VolunteerCampaignDatabase.instance.getCampaignsByStatus('approved');
+  }
 
   Widget _pendingCampaignSection(BuildContext context) {
     return FutureBuilder<List<Campaign>>(
@@ -230,6 +256,7 @@ class _DashboardHome extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 180),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             margin: EdgeInsets.all(16),
@@ -251,7 +278,7 @@ class _DashboardHome extends StatelessWidget {
                 SizedBox(height: 8),
                 Text("Welcome To Bantoo!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 Text(
-                  username,
+                  widget.username,
                   style: TextStyle(fontSize: 16, color: Colors.blueGrey),
                 ),
                 SizedBox(height: 6),
@@ -278,9 +305,129 @@ class _DashboardHome extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16),
-          if (role == "admin") _pendingCampaignSection(context),
-          EmergencyBantooSection(key: emergencyKey, role: role, username: username),
-          SizedBox(height: 36),
+          if (widget.role == "admin") _pendingCampaignSection(context),
+          EmergencyBantooSection(key: widget.emergencyKey, role: widget.role, username: widget.username),
+          SizedBox(height: 16),
+
+          // EMERGENCY BANTOO SECTION (donasi approved)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Row(
+              children: [
+                Text("Emergency Bantoo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Spacer(),
+                TextButton(
+                  onPressed: () {}, // bisa diisi navigasi ke list semua donasi
+                  child: Text("View all"),
+                ),
+              ],
+            ),
+          ),
+          FutureBuilder<List<Campaign>>(
+            future: _donasiApprovedFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return SizedBox(height: 160, child: Center(child: CircularProgressIndicator()));
+              }
+              final list = snapshot.data ?? [];
+              if (list.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text("Tidak ada campaign donasi emergency."),
+                );
+              }
+              return SizedBox(
+                height: 210,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: list.length,
+                  itemBuilder: (context, idx) {
+                    final c = list[idx];
+                    return BantooCampaignCard(
+                      campaign: c,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CampaignDetailScreen(campaign: c),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  separatorBuilder: (_, __) => SizedBox(width: 12),
+                ),
+              );
+            },
+          ),
+
+          // THE EVENT IS ABOUT TO EXPIRE SECTION (volunteer approved)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Text("The Event Is About To Expire", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          ),
+          FutureBuilder<List<VolunteerCampaign>>(
+            future: _volunteerApprovedFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return SizedBox(height: 190, child: Center(child: CircularProgressIndicator()));
+              }
+              final list = snapshot.data ?? [];
+              if (list.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text("Tidak ada campaign volunteer aktif."),
+                );
+              }
+              return SizedBox(
+                height: 210,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: list.length,
+                  itemBuilder: (context, idx) {
+                    final v = list[idx];
+                    return VolunteerCampaignHorizontalCard(
+                      campaign: v,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => VolunteerCampaignDetailScreen(campaign: v),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  separatorBuilder: (_, __) => SizedBox(width: 12),
+                ),
+              );
+            },
+          ),
+
+          // ASK FOR NEW CAMPAIGN
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Ask For New Campaign", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () => widget.showCampaignSelectionDialog(context),
+                  child: BantooCampaignCard(onTap: () => widget.showCampaignSelectionDialog(context)),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: Text(
+              "Copyright © 2025 Kitabisa. All Rights Reserved",
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ),
         ],
       ),
     );

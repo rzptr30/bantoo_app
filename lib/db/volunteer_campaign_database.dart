@@ -26,22 +26,24 @@ class VolunteerCampaignDatabase {
   }
 
   Future _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE volunteer_campaigns (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        location TEXT NOT NULL,
-        quota TEXT NOT NULL,
-        fee TEXT NOT NULL,
-        eventDate TEXT NOT NULL,
-        imagePath TEXT NOT NULL,
-        creator TEXT NOT NULL,
-        status TEXT NOT NULL,
-        createdAt TEXT NOT NULL
-      )
-    ''');
-  }
+  await db.execute('''
+    CREATE TABLE volunteer_campaigns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      location TEXT NOT NULL,
+      quota TEXT NOT NULL,
+      fee TEXT NOT NULL,
+      eventDate TEXT NOT NULL,
+      imagePath TEXT NOT NULL,
+      creator TEXT NOT NULL,
+      status TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      registrationStart TEXT NOT NULL, -- Tambahan
+      registrationEnd TEXT NOT NULL    -- Tambahan
+    )
+  ''');
+}
 
   Future<int> insert(VolunteerCampaign campaign) async {
     final db = await instance.database;

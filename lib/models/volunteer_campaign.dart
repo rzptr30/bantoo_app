@@ -10,6 +10,8 @@ class VolunteerCampaign {
   final String creator;
   final String status; // pending, approved, rejected
   final DateTime createdAt;
+  final DateTime registrationStart; // Tambah ini
+  final DateTime registrationEnd;   // Tambah ini
 
   VolunteerCampaign({
     this.id,
@@ -23,6 +25,8 @@ class VolunteerCampaign {
     required this.creator,
     required this.status,
     required this.createdAt,
+    required this.registrationStart,
+    required this.registrationEnd,
   });
 
   Map<String, dynamic> toMap() {
@@ -38,6 +42,8 @@ class VolunteerCampaign {
       'creator': creator,
       'status': status,
       'createdAt': createdAt.toIso8601String(),
+      'registrationStart': registrationStart.toIso8601String(),
+      'registrationEnd': registrationEnd.toIso8601String(),
     };
   }
 
@@ -54,10 +60,11 @@ class VolunteerCampaign {
       creator: map['creator'],
       status: map['status'],
       createdAt: DateTime.parse(map['createdAt']),
+      registrationStart: DateTime.parse(map['registrationStart']),
+      registrationEnd: DateTime.parse(map['registrationEnd']),
     );
   }
 
-  // Tambah method copyWith
   VolunteerCampaign copyWith({
     int? id,
     String? title,
@@ -70,6 +77,8 @@ class VolunteerCampaign {
     String? creator,
     String? status,
     DateTime? createdAt,
+    DateTime? registrationStart,
+    DateTime? registrationEnd,
   }) {
     return VolunteerCampaign(
       id: id ?? this.id,
@@ -83,6 +92,8 @@ class VolunteerCampaign {
       creator: creator ?? this.creator,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      registrationStart: registrationStart ?? this.registrationStart,
+      registrationEnd: registrationEnd ?? this.registrationEnd,
     );
   }
 }

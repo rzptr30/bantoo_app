@@ -15,7 +15,7 @@ class RequestCampaignScreen extends StatefulWidget {
 
   @override
   State<RequestCampaignScreen> createState() => _RequestCampaignScreenState();
-} 
+}
 
 class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   final _judulController = TextEditingController();
@@ -25,6 +25,8 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   final _biayaController = TextEditingController();
   DateTime? _selectedDate;
   File? _selectedImage;
+  DateTime? _registrationStart;
+  DateTime? _registrationEnd;
   bool _isSubmitting = false;
 
   final String _terms = '''
@@ -97,6 +99,40 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
     }
   }
 
+  Future<void> _selectRegistrationStart() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: this.context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: now.add(Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        _registrationStart = picked;
+        // Reset registrationEnd if not valid anymore
+        if (_registrationEnd != null && _registrationEnd!.isBefore(_registrationStart!)) {
+          _registrationEnd = null;
+        }
+      });
+    }
+  }
+
+  Future<void> _selectRegistrationEnd() async {
+    final now = _registrationStart ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: this.context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: now.add(Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        _registrationEnd = picked;
+      });
+    }
+  }
+
   void _submit() async {
     if (_judulController.text.isEmpty ||
         _descController.text.isEmpty ||
@@ -104,9 +140,17 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         _kuotaController.text.isEmpty ||
         _biayaController.text.isEmpty ||
         _selectedDate == null ||
-        _selectedImage == null) {
+        _selectedImage == null ||
+        _registrationStart == null ||
+        _registrationEnd == null) {
       ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(content: Text('Semua field harus diisi!')),
+      );
+      return;
+    }
+    if (_registrationStart!.isAfter(_registrationEnd!)) {
+      ScaffoldMessenger.of(this.context).showSnackBar(
+        SnackBar(content: Text('Tanggal oprec selesai harus setelah tanggal mulai!')),
       );
       return;
     }
@@ -123,6 +167,8 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       creator: widget.creator,
       status: 'pending',
       createdAt: DateTime.now(),
+      registrationStart: _registrationStart!,
+      registrationEnd: _registrationEnd!,
     );
 
     await VolunteerCampaignDatabase.instance.insert(campaign);
@@ -206,6 +252,40 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
                     _selectedDate == null
                         ? "Pilih Tanggal"
                         : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            // Oprec Start
+            Row(
+              children: [
+                Text("Oprec Mulai", style: TextStyle(fontSize: 16)),
+                Spacer(),
+                TextButton(
+                  onPressed: _selectRegistrationStart,
+                  child: Text(
+                    _registrationStart == null
+                        ? "Pilih Tanggal"
+                        : "${_registrationStart!.day}/${_registrationStart!.month}/${_registrationStart!.year}",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            // Oprec End
+            Row(
+              children: [
+                Text("Oprec Selesai", style: TextStyle(fontSize: 16)),
+                Spacer(),
+                TextButton(
+                  onPressed: _registrationStart == null ? null : _selectRegistrationEnd,
+                  child: Text(
+                    _registrationEnd == null
+                        ? "Pilih Tanggal"
+                        : "${_registrationEnd!.day}/${_registrationEnd!.month}/${_registrationEnd!.year}",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
