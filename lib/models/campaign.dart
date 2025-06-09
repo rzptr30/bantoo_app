@@ -48,4 +48,29 @@ class Campaign {
       creator: map['creator'] ?? '',
     );
   }
+
+  // Tambah method copyWith
+  Campaign copyWith({
+    int? id,
+    String? title,
+    String? description,
+    int? targetFund,
+    int? collectedFund,
+    String? endDate,
+    String? imagePath,
+    String? status,
+    String? creator,
+  }) {
+    return Campaign(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      targetFund: targetFund ?? this.targetFund,
+      collectedFund: collectedFund ?? this.collectedFund,
+      endDate: endDate ?? this.endDate,
+      imagePath: imagePath ?? this.imagePath,
+      status: status ?? this.status,
+      creator: creator ?? this.creator,
+    );
+  }
 }

@@ -5,6 +5,7 @@ import 'user_campaign_archive_screen.dart';
 import 'transaction_history_screen.dart';
 import '../db/campaign_database.dart';
 import 'login_screen.dart';
+import 'my_campaigns_screen.dart'; // Tambahkan import ini
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -30,6 +31,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _menuItems = [
+      {
+        'icon': Icons.campaign,
+        'label': 'Campaign Saya',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MyCampaignsScreen(creator: widget.username),
+            ),
+          );
+        },
+      },
       {
         'icon': Icons.archive,
         'label': 'Campaign Archive',
@@ -130,8 +143,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar tetap ada, JUDUL Profile cukup di sini saja; tidak perlu judul Profile lagi di body!
-      // appBar: AppBar(title: Text("Profile")),
       body: ListView.builder(
         itemCount: _menuItems.length,
         itemBuilder: (context, index) {

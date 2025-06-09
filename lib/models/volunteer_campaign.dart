@@ -56,4 +56,33 @@ class VolunteerCampaign {
       createdAt: DateTime.parse(map['createdAt']),
     );
   }
+
+  // Tambah method copyWith
+  VolunteerCampaign copyWith({
+    int? id,
+    String? title,
+    String? description,
+    String? location,
+    String? quota,
+    String? fee,
+    DateTime? eventDate,
+    String? imagePath,
+    String? creator,
+    String? status,
+    DateTime? createdAt,
+  }) {
+    return VolunteerCampaign(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      location: location ?? this.location,
+      quota: quota ?? this.quota,
+      fee: fee ?? this.fee,
+      eventDate: eventDate ?? this.eventDate,
+      imagePath: imagePath ?? this.imagePath,
+      creator: creator ?? this.creator,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

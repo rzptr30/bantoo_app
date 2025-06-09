@@ -102,6 +102,17 @@ class VolunteerCampaignDatabase {
     }
   }
 
+  // Edit: method update
+  Future<int> update(VolunteerCampaign campaign) async {
+    final db = await instance.database;
+    return await db.update(
+      'volunteer_campaigns',
+      campaign.toMap(),
+      where: 'id = ?',
+      whereArgs: [campaign.id],
+    );
+  }
+
   Future<int> updateCampaign(VolunteerCampaign campaign) async {
     final db = await instance.database;
     return await db.update(

@@ -146,6 +146,12 @@ class CampaignDatabase {
     return await updateCampaignStatus(id, status);
   }
 
+  // Edit: method update
+  Future<int> update(Campaign campaign) async {
+    final db = await instance.database;
+    return await db.update('campaigns', campaign.toMap(), where: 'id = ?', whereArgs: [campaign.id]);
+  }
+
   Future<int> updateCampaign(Campaign campaign) async {
     final db = await instance.database;
     return await db.update('campaigns', campaign.toMap(), where: 'id = ?', whereArgs: [campaign.id]);
