@@ -148,4 +148,15 @@ class VolunteerCampaignDatabase {
     final db = await instance.database;
     await db.delete('volunteer_campaigns');
   }
+  Future<List<VolunteerCampaign>> getActiveOprecVolunteerCampaigns() async {
+  final db = await instance.database;
+  final todayIso = DateTime.now().toIso8601String();
+  final result = await db.query(
+    'volunteer_campaigns',
+    where: 'status = ? AND registrationStart <= ? AND registrationEnd >= ?',
+    whereArgs: ['approved', todayIso, todayIso],
+    orderBy: 'id DESC',
+  );
+  return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
+}
 }

@@ -37,13 +37,13 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEFF3F6),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF222E3A),
-        elevation: 0,
-        centerTitle: true,
-        title: const Text("Bantoo Volunteer", style: TextStyle(fontWeight: FontWeight.bold)),
+    // return Scaffold(
+    //   backgroundColor: const Color(0xFFEFF3F6),
+    //   appBar: AppBar(
+    //     backgroundColor: const Color(0xFF222E3A),
+    //     elevation: 0,
+    //     centerTitle: true,
+    //     title: const Text("Bantoo Volunteer", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),

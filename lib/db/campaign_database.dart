@@ -239,4 +239,15 @@ class CampaignDatabase {
     await db.delete('doas');
     await db.delete('campaigns');
   }
+  Future<List<Campaign>> getActiveDonasiCampaigns() async {
+  final db = await instance.database;
+  final nowIso = DateTime.now().toIso8601String();
+  final result = await db.query(
+    'campaigns',
+    where: 'status = ? AND endDate >= ?',
+    whereArgs: ['approved', nowIso],
+    orderBy: 'id DESC',
+  );
+  return result.map((map) => Campaign.fromMap(map)).toList();
+}
 }

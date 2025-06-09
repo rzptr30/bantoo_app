@@ -5,7 +5,8 @@ import 'user_campaign_archive_screen.dart';
 import 'transaction_history_screen.dart';
 import '../db/campaign_database.dart';
 import 'login_screen.dart';
-import 'my_campaigns_screen.dart'; // Tambahkan import ini
+import 'my_campaigns_screen.dart';
+import 'admin_campaign_approval_screen.dart'; // Tambahkan import ini
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -138,20 +139,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
       },
     ];
+
+    // Tambah menu khusus admin di paling atas
+    if (widget.role == "admin") {
+      _menuItems.insert(0, {
+        'icon': Icons.verified,
+        'label': 'Approval Campaign',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AdminCampaignApprovalScreen()),
+          );
+        },
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.builder(
-        itemCount: _menuItems.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: Icon(_menuItems[index]['icon']),
-            title: Text(_menuItems[index]['label']),
-            onTap: _menuItems[index]['onTap'],
-          );
-        },
+      backgroundColor: Color(0xFFEFF3F6),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 48.0, bottom: 24),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 44,
+                  backgroundImage: AssetImage(widget.avatarAsset),
+                ),
+                SizedBox(height: 12),
+                Text(widget.username, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                Text(widget.email, style: TextStyle(color: Colors.blueGrey)),
+                if (widget.role == "admin")
+                  Container(
+                    margin: EdgeInsets.only(top: 6),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[900],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text('Admin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              itemCount: _menuItems.length,
+              separatorBuilder: (_, __) => Divider(height: 1),
+              itemBuilder: (context, i) {
+                final item = _menuItems[i];
+                return ListTile(
+                  leading: Icon(item['icon'], color: Color(0xFF183B56)),
+                  title: Text(item['label']),
+                  onTap: item['onTap'],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

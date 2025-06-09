@@ -78,19 +78,11 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Text(
-              widget.role == "admin"
-                  ? "Belum ada campaign."
-                  : "Belum ada campaign emergency.\nKlik tombol '+' untuk menambah.",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          );
+        final campaigns = snapshot.data ?? [];
+        if (campaigns.isEmpty) {
+          // Tidak menampilkan apapun jika kosong
+          return SizedBox.shrink();
         }
-        final campaigns = snapshot.data!;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

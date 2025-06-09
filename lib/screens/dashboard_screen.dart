@@ -208,8 +208,8 @@ class __DashboardHomeState extends State<_DashboardHome> {
   @override
   void initState() {
     super.initState();
-    _donasiApprovedFuture = CampaignDatabase.instance.getCampaignsByStatus('approved');
-    _volunteerApprovedFuture = VolunteerCampaignDatabase.instance.getCampaignsByStatus('approved');
+    _donasiApprovedFuture = CampaignDatabase.instance.getActiveDonasiCampaigns();
+    _volunteerApprovedFuture = VolunteerCampaignDatabase.instance.getActiveOprecVolunteerCampaigns();
   }
 
   Widget _pendingCampaignSection(BuildContext context) {
@@ -317,7 +317,18 @@ class __DashboardHomeState extends State<_DashboardHome> {
                 Text("Emergency Bantoo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 Spacer(),
                 TextButton(
-                  onPressed: () {}, // bisa diisi navigasi ke list semua donasi
+                  onPressed: () {
+                    // View all donasi emergency (ke EmergencyBantooSection)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EmergencyBantooSection(
+                          role: widget.role,
+                          username: widget.username,
+                        ),
+                      ),
+                    );
+                  },
                   child: Text("View all"),
                 ),
               ],
@@ -364,8 +375,28 @@ class __DashboardHomeState extends State<_DashboardHome> {
 
           // THE EVENT IS ABOUT TO EXPIRE SECTION (volunteer approved)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Text("The Event Is About To Expire", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Row(
+              children: [
+                Text("The Event Is About To Expire", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Spacer(),
+                TextButton(
+                  onPressed: () {
+                    // View all volunteer event
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => VolunteerScreen(
+                          // username: widget.username,
+                          // role: widget.role,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text("View all"),
+                ),
+              ],
+            ),
           ),
           FutureBuilder<List<VolunteerCampaign>>(
             future: _volunteerApprovedFuture,
