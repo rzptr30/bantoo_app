@@ -23,7 +23,10 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
 
   Future<void> _loadVolunteers() async {
     setState(() => _isLoading = true);
-    final data = await VolunteerDB().getVolunteers(offset: (_page - 1) * _perPage, limit: _perPage);
+    final data = await VolunteerDB().getVolunteers(
+      offset: (_page - 1) * _perPage,
+      limit: _perPage,
+    );
     setState(() {
       _volunteers = data;
       _isLoading = false;
@@ -37,13 +40,16 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // return Scaffold(
-    //   backgroundColor: const Color(0xFFEFF3F6),
-    //   appBar: AppBar(
-    //     backgroundColor: const Color(0xFF222E3A),
-    //     elevation: 0,
-    //     centerTitle: true,
-    //     title: const Text("Bantoo Volunteer", style: TextStyle(fontWeight: FontWeight.bold)),
+    return Scaffold(
+      backgroundColor: const Color(0xFFEFF3F6),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF222E3A),
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "Bantoo Volunteer",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -58,7 +64,9 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
                       itemBuilder: (context, i) {
                         final v = _volunteers[i];
                         return Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           elevation: 2,
                           child: Padding(
                             padding: const EdgeInsets.all(12),
@@ -81,40 +89,89 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          const Text("Agency: ", style: TextStyle(fontWeight: FontWeight.w600)),
-                                          Expanded(child: Text(v.agency, style: const TextStyle(fontWeight: FontWeight.w400))),
+                                          const Text(
+                                            "Agency: ",
+                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              v.agency,
+                                              style: const TextStyle(fontWeight: FontWeight.w400),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                       Row(
                                         children: [
-                                          const Text("Location: ", style: TextStyle(fontWeight: FontWeight.w600)),
-                                          Expanded(child: Text(v.location, style: const TextStyle(fontWeight: FontWeight.w400))),
+                                          const Text(
+                                            "Location: ",
+                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              v.location,
+                                              style: const TextStyle(fontWeight: FontWeight.w400),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                       const SizedBox(height: 4),
-                                      const Text("Description", style: TextStyle(fontWeight: FontWeight.w600)),
-                                      Text(v.description, maxLines: 3, overflow: TextOverflow.ellipsis),
+                                      const Text(
+                                        "Description",
+                                        style: TextStyle(fontWeight: FontWeight.w600),
+                                      ),
+                                      Text(
+                                        v.description,
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                       const SizedBox(height: 8),
                                       Row(
                                         children: [
-                                          const Text("Expired date: ", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                                          Text(v.expired, style: const TextStyle(fontSize: 13)),
+                                          const Text(
+                                            "Expired date: ",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          Text(
+                                            v.expired,
+                                            style: const TextStyle(fontSize: 13),
+                                          ),
                                         ],
                                       ),
                                       Row(
                                         children: [
-                                          const Text("Registration Fee: ", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                          const Text(
+                                            "Registration Fee: ",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
                                           Text(
                                             v.fee,
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: v.fee == 'Free' ? Colors.green : Colors.red,
+                                              color: v.fee == 'Free'
+                                                  ? Colors.green
+                                                  : Colors.red,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                           const SizedBox(width: 10),
-                                          const Text("Applicant quota: ", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                                          Text(v.quota.toString(), style: const TextStyle(fontSize: 13)),
+                                          const Text(
+                                            "Applicant quota: ",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          Text(
+                                            v.quota.toString(),
+                                            style: const TextStyle(fontSize: 13),
+                                          ),
                                         ],
                                       ),
                                       const SizedBox(height: 8),
@@ -124,10 +181,15 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
                                           onPressed: () {},
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color(0xFF222E3A),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
                                             padding: const EdgeInsets.symmetric(vertical: 8),
                                           ),
-                                          child: const Text("Join now", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          child: const Text(
+                                            "Join now",
+                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -144,11 +206,23 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _PageButton(number: 1, isActive: _page == 1, onTap: () => _changePage(1)),
+                _PageButton(
+                  number: 1,
+                  isActive: _page == 1,
+                  onTap: () => _changePage(1),
+                ),
                 const SizedBox(width: 8),
-                _PageButton(number: 2, isActive: _page == 2, onTap: () => _changePage(2)),
+                _PageButton(
+                  number: 2,
+                  isActive: _page == 2,
+                  onTap: () => _changePage(2),
+                ),
                 const SizedBox(width: 8),
-                _PageButton(number: 3, isActive: _page == 3, onTap: () => _changePage(3)),
+                _PageButton(
+                  number: 3,
+                  isActive: _page == 3,
+                  onTap: () => _changePage(3),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -169,7 +243,13 @@ class _PageButton extends StatelessWidget {
   final int number;
   final bool isActive;
   final VoidCallback? onTap;
-  const _PageButton({required this.number, this.isActive = false, this.onTap});
+
+  const _PageButton({
+    required this.number,
+    this.isActive = false,
+    this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

@@ -36,7 +36,7 @@ class BantooCampaignCard extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(32),
               child: AspectRatio(
-                aspectRatio: 16 / 10,
+                aspectRatio: 16 / 12,
                 child: Stack(
                   children: [
                     // Background Image

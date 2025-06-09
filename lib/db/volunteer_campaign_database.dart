@@ -22,28 +22,36 @@ class VolunteerCampaignDatabase {
       path,
       version: 1,
       onCreate: _createDB,
+      // onUpgrade untuk migrasi jika sudah pernah buat DB sebelumnya
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // Pastikan kolom sudah ada
+        await db.execute('ALTER TABLE volunteer_campaigns ADD COLUMN terms TEXT;');
+        await db.execute('ALTER TABLE volunteer_campaigns ADD COLUMN disclaimer TEXT;');
+      },
     );
   }
 
   Future _createDB(Database db, int version) async {
-  await db.execute('''
-    CREATE TABLE volunteer_campaigns (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      description TEXT NOT NULL,
-      location TEXT NOT NULL,
-      quota TEXT NOT NULL,
-      fee TEXT NOT NULL,
-      eventDate TEXT NOT NULL,
-      imagePath TEXT NOT NULL,
-      creator TEXT NOT NULL,
-      status TEXT NOT NULL,
-      createdAt TEXT NOT NULL,
-      registrationStart TEXT NOT NULL, -- Tambahan
-      registrationEnd TEXT NOT NULL    -- Tambahan
-    )
-  ''');
-}
+    await db.execute('''
+      CREATE TABLE volunteer_campaigns (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        location TEXT NOT NULL,
+        quota TEXT NOT NULL,
+        fee TEXT NOT NULL,
+        eventDate TEXT NOT NULL,
+        imagePath TEXT NOT NULL,
+        creator TEXT NOT NULL,
+        status TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        registrationStart TEXT NOT NULL,
+        registrationEnd TEXT NOT NULL,
+        terms TEXT,
+        disclaimer TEXT
+      )
+    ''');
+  }
 
   Future<int> insert(VolunteerCampaign campaign) async {
     final db = await instance.database;
@@ -104,7 +112,6 @@ class VolunteerCampaignDatabase {
     }
   }
 
-  // Edit: method update
   Future<int> update(VolunteerCampaign campaign) async {
     final db = await instance.database;
     return await db.update(
@@ -148,15 +155,16 @@ class VolunteerCampaignDatabase {
     final db = await instance.database;
     await db.delete('volunteer_campaigns');
   }
+
   Future<List<VolunteerCampaign>> getActiveOprecVolunteerCampaigns() async {
-  final db = await instance.database;
-  final todayIso = DateTime.now().toIso8601String();
-  final result = await db.query(
-    'volunteer_campaigns',
-    where: 'status = ? AND registrationStart <= ? AND registrationEnd >= ?',
-    whereArgs: ['approved', todayIso, todayIso],
-    orderBy: 'id DESC',
-  );
-  return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
-}
+    final db = await instance.database;
+    final todayIso = DateTime.now().toIso8601String();
+    final result = await db.query(
+      'volunteer_campaigns',
+      where: 'status = ? AND registrationStart <= ? AND registrationEnd >= ?',
+      whereArgs: ['approved', todayIso, todayIso],
+      orderBy: 'id DESC',
+    );
+    return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
+  }
 }

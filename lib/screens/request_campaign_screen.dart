@@ -23,27 +23,13 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   final _lokasiController = TextEditingController();
   final _kuotaController = TextEditingController();
   final _biayaController = TextEditingController();
+  final _termsController = TextEditingController();
+  final _disclaimerController = TextEditingController();
   DateTime? _selectedDate;
   File? _selectedImage;
   DateTime? _registrationStart;
   DateTime? _registrationEnd;
   bool _isSubmitting = false;
-
-  final String _terms = '''
-- Mendaftar langsung melalui aplikasi ini
-- Kuota terbatas, pendaftaran ditutup setelah kuota terpenuhi
-- Peserta wajib hadir tepat waktu dan mengikuti seluruh rangkaian kegiatan
-- Wajib menjaga etika dan tidak menyalahgunakan informasi pribadi peserta lain
-- Mengisi seluruh persyaratan dari panitia selama acara berlangsung
-''';
-
-  final String _disclaimer = '''
-- Selama kegiatan akan dilakukan dokumentasi (foto & video)
-- Dokumentasi menjadi milik panitia dan digunakan untuk publikasi
-- Dengan mendaftar melalui aplikasi, peserta menyetujui seluruh syarat & ketentuan
-- Panitia tidak bertanggung jawab atas kehilangan/penyebaran data pribadi antar peserta
-- Pastikan data yang kamu input di aplikasi benar dan valid
-''';
 
   Future<void> _pickAndCropImage() async {
     try {
@@ -142,7 +128,9 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         _selectedDate == null ||
         _selectedImage == null ||
         _registrationStart == null ||
-        _registrationEnd == null) {
+        _registrationEnd == null ||
+        _termsController.text.isEmpty ||
+        _disclaimerController.text.isEmpty) {
       ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(content: Text('Semua field harus diisi!')),
       );
@@ -169,6 +157,8 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       createdAt: DateTime.now(),
       registrationStart: _registrationStart!,
       registrationEnd: _registrationEnd!,
+      terms: _termsController.text,
+      disclaimer: _disclaimerController.text,
     );
 
     await VolunteerCampaignDatabase.instance.insert(campaign);
@@ -314,28 +304,24 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
             // Terms & Disclaimer
             Text("Terms & Conditions", style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 6),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+            TextField(
+              controller: _termsController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: "Isi Terms & Conditions di sini...",
+                border: OutlineInputBorder(),
               ),
-              child: Text(_terms, style: TextStyle(fontSize: 13, color: Colors.black87)),
             ),
             SizedBox(height: 10),
             Text("Disclaimer", style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 6),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+            TextField(
+              controller: _disclaimerController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: "Isi Disclaimer di sini...",
+                border: OutlineInputBorder(),
               ),
-              child: Text(_disclaimer, style: TextStyle(fontSize: 13, color: Colors.black87)),
             ),
             SizedBox(height: 32),
             Center(

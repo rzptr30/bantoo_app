@@ -8,10 +8,12 @@ class VolunteerCampaign {
   final DateTime eventDate;
   final String imagePath;
   final String creator;
-  final String status; // pending, approved, rejected
+  final String status;
   final DateTime createdAt;
-  final DateTime registrationStart; // Tambah ini
-  final DateTime registrationEnd;   // Tambah ini
+  final DateTime registrationStart;
+  final DateTime registrationEnd;
+  final String terms;       // NEW
+  final String disclaimer;  // NEW
 
   VolunteerCampaign({
     this.id,
@@ -27,6 +29,8 @@ class VolunteerCampaign {
     required this.createdAt,
     required this.registrationStart,
     required this.registrationEnd,
+    required this.terms,        // NEW
+    required this.disclaimer,   // NEW
   });
 
   Map<String, dynamic> toMap() {
@@ -44,6 +48,8 @@ class VolunteerCampaign {
       'createdAt': createdAt.toIso8601String(),
       'registrationStart': registrationStart.toIso8601String(),
       'registrationEnd': registrationEnd.toIso8601String(),
+      'terms': terms,              // NEW
+      'disclaimer': disclaimer,    // NEW
     };
   }
 
@@ -62,6 +68,8 @@ class VolunteerCampaign {
       createdAt: DateTime.parse(map['createdAt']),
       registrationStart: DateTime.parse(map['registrationStart']),
       registrationEnd: DateTime.parse(map['registrationEnd']),
+      terms: map['terms'] ?? '',             // NEW
+      disclaimer: map['disclaimer'] ?? '',   // NEW
     );
   }
 
@@ -79,6 +87,8 @@ class VolunteerCampaign {
     DateTime? createdAt,
     DateTime? registrationStart,
     DateTime? registrationEnd,
+    String? terms,         // NEW
+    String? disclaimer,    // NEW
   }) {
     return VolunteerCampaign(
       id: id ?? this.id,
@@ -94,6 +104,8 @@ class VolunteerCampaign {
       createdAt: createdAt ?? this.createdAt,
       registrationStart: registrationStart ?? this.registrationStart,
       registrationEnd: registrationEnd ?? this.registrationEnd,
+      terms: terms ?? this.terms,
+      disclaimer: disclaimer ?? this.disclaimer,
     );
   }
 }

@@ -57,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => RequestCampaignScreen(creator: widget.username),
+                    builder: (_) => AddCampaignScreen(creator: widget.username),
                   ),
                 ).then((result) {
                   if (result == true) {
@@ -135,19 +135,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           )
                         : VolunteerScreen(),
           ),
-          if (_selectedIndex == 0)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 16 + 64,
-              child: Center(
-                child: BantooCampaignCard(
-                  onTap: () {
-                    _showCampaignSelectionDialog(context);
-                  },
-                ),
-              ),
-            ),
         ],
       ),
       floatingActionButton: null,
@@ -258,35 +245,38 @@ class __DashboardHomeState extends State<_DashboardHome> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: EdgeInsets.all(16),
-            padding: EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
+          // WELCOME CARD FULL WIDTH
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ],
             ),
-            child: Column(
-              children: [
-                Image.asset('assets/logo_bantoo.png', height: 48),
-                SizedBox(height: 8),
-                Text("Welcome To Bantoo!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                Text(
-                  widget.username,
-                  style: TextStyle(fontSize: 16, color: Colors.blueGrey),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  "Sharing together for Bantoo those in need",
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-              ],
+            margin: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+Image.asset('assets/logo_bantoo.png', height: 48),                  SizedBox(height: 10),
+                  Text(
+                    "Welcome To Bantoo!",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    widget.username,
+                    style: TextStyle(fontSize: 16, color: Colors.blueGrey, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    "Sharing together for Bantoo those in need",
+                    style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
           Padding(
@@ -318,7 +308,6 @@ class __DashboardHomeState extends State<_DashboardHome> {
                 Spacer(),
                 TextButton(
                   onPressed: () {
-                    // View all donasi emergency (ke EmergencyBantooSection)
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -382,14 +371,10 @@ class __DashboardHomeState extends State<_DashboardHome> {
                 Spacer(),
                 TextButton(
                   onPressed: () {
-                    // View all volunteer event
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => VolunteerScreen(
-                          // username: widget.username,
-                          // role: widget.role,
-                        ),
+                        builder: (_) => VolunteerScreen(),
                       ),
                     );
                   },
