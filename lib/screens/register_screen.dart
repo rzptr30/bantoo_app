@@ -21,69 +21,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _error = '';
       _isLoading = true;
     });
+    try {
+      if (!_accept) {
+        setState(() {
+          _error = 'Anda harus menyetujui Terms & Conditions';
+          _isLoading = false;
+        });
+        return;
+      }
+      if (_controllerPass.text != _controllerConfirm.text) {
+        setState(() {
+          _error = 'Password tidak sama';
+          _isLoading = false;
+        });
+        return;
+      }
+      if (_controllerEmail.text.isEmpty || _controllerUsername.text.isEmpty || _controllerPass.text.isEmpty) {
+        setState(() {
+          _error = 'Semua field harus diisi';
+          _isLoading = false;
+        });
+        return;
+      }
 
-    if (!_accept) {
+      // Cek username unik
+      final existingUser = await UserDatabase.instance.getUserByUsername(_controllerUsername.text.trim());
+      if (existingUser != null) {
+        setState(() {
+          _error = 'Username sudah terdaftar, silakan gunakan username lain';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Simpan user ke SQLite
+      final user = User(
+        username: _controllerUsername.text.trim(),
+        email: _controllerEmail.text.trim(),
+        password: _controllerPass.text.trim(),
+      );
+      await UserDatabase.instance.createUser(user);
+
       setState(() {
-        _error = 'Anda harus menyetujui Terms & Conditions';
         _isLoading = false;
       });
-      return;
-    }
-    if (_controllerPass.text != _controllerConfirm.text) {
+
+      // Tampilkan pop-up sukses dan langsung ke login
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: Text('Sign Up Success'),
+          content: Text('Akun berhasil dibuat. Silakan login!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // tutup dialog
+                Navigator.pop(context); // kembali ke login
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
       setState(() {
-        _error = 'Password tidak sama';
+        _error = 'Terjadi error saat register: $e';
         _isLoading = false;
       });
-      return;
     }
-    if (_controllerEmail.text.isEmpty || _controllerUsername.text.isEmpty || _controllerPass.text.isEmpty) {
-      setState(() {
-        _error = 'Semua field harus diisi';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    // Cek username unik
-    final existingUser = await UserDatabase.instance.getUserByUsername(_controllerUsername.text.trim());
-    if (existingUser != null) {
-      setState(() {
-        _error = 'Username sudah terdaftar, silakan gunakan username lain';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    // Simpan user ke SQLite
-    final user = User(
-      username: _controllerUsername.text.trim(),
-      email: _controllerEmail.text.trim(),
-      password: _controllerPass.text.trim(),
-    );
-    await UserDatabase.instance.createUser(user);
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    // Tampilkan pop-up sukses dan langsung ke login
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: Text('Sign Up Success'),
-        content: Text('Akun berhasil dibuat. Silakan login!'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // tutup dialog
-              Navigator.pop(context); // kembali ke login
-            },
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override

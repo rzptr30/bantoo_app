@@ -194,7 +194,7 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                                         value: percent,
                                         backgroundColor: Colors.grey[300],
                                         color: Colors.blue,
-                                        minHeight: 8,
+                                        minHeight: 4,
                                       ),
                                       SizedBox(height: 4),
                                       Text(

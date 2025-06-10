@@ -38,7 +38,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       if (picked != null) {
         final cropped = await ImageCropper().cropImage(
           sourcePath: picked.path,
-          aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // 1:1 for volunteer
           compressQuality: 90,
           uiSettings: [
             AndroidUiSettings(
@@ -144,30 +144,37 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
     }
     setState(() => _isSubmitting = true);
 
-    final campaign = VolunteerCampaign(
-      title: _judulController.text,
-      description: _descController.text,
-      location: _lokasiController.text,
-      quota: _kuotaController.text,
-      fee: _biayaController.text,
-      eventDate: _selectedDate!,
-      imagePath: _selectedImage!.path,
-      creator: widget.creator,
-      status: 'pending',
-      createdAt: DateTime.now(),
-      registrationStart: _registrationStart!,
-      registrationEnd: _registrationEnd!,
-      terms: _termsController.text,
-      disclaimer: _disclaimerController.text,
-    );
+    try {
+      final campaign = VolunteerCampaign(
+        title: _judulController.text,
+        description: _descController.text,
+        location: _lokasiController.text,
+        quota: _kuotaController.text,
+        fee: _biayaController.text,
+        eventDate: _selectedDate!,
+        imagePath: _selectedImage!.path,
+        creator: widget.creator,
+        status: 'pending',
+        createdAt: DateTime.now(),
+        registrationStart: _registrationStart!,
+        registrationEnd: _registrationEnd!,
+        terms: _termsController.text,
+        disclaimer: _disclaimerController.text,
+      );
 
-    await VolunteerCampaignDatabase.instance.insert(campaign);
+      await VolunteerCampaignDatabase.instance.insert(campaign);
 
-    setState(() => _isSubmitting = false);
-    ScaffoldMessenger.of(this.context).showSnackBar(
-      SnackBar(content: Text('Campaign volunteer berhasil diajukan!')),
-    );
-    Navigator.pop(this.context, true);
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(this.context).showSnackBar(
+        SnackBar(content: Text('Campaign volunteer berhasil diajukan!')),
+      );
+      Navigator.pop(this.context, true);
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(this.context).showSnackBar(
+        SnackBar(content: Text('Terjadi error saat submit: $e')),
+      );
+    }
   }
 
   Widget _buildImagePreview() {

@@ -258,7 +258,8 @@ class __DashboardHomeState extends State<_DashboardHome> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-Image.asset('assets/logo_bantoo.png', height: 48),                  SizedBox(height: 10),
+                  Image.asset('assets/logo_bantoo.png', height: 48),                  
+                  SizedBox(height: 10),
                   Text(
                     "Welcome To Bantoo!",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
@@ -300,29 +301,29 @@ Image.asset('assets/logo_bantoo.png', height: 48),                  SizedBox(hei
           SizedBox(height: 16),
 
           // EMERGENCY BANTOO SECTION (donasi approved)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Row(
-              children: [
-                Text("Emergency Bantoo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                Spacer(),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EmergencyBantooSection(
-                          role: widget.role,
-                          username: widget.username,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text("View all"),
-                ),
-              ],
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          //   child: Row(
+          //     children: [
+          //       Text("Emergency Bantoo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          //       Spacer(),
+          //       TextButton(
+          //         onPressed: () {
+          //           Navigator.push(
+          //             context,
+          //             MaterialPageRoute(
+          //               builder: (_) => EmergencyBantooSection(
+          //                 role: widget.role,
+          //                 username: widget.username,
+          //               ),
+          //             ),
+          //           );
+          //         },
+          //         child: Text("View all"),
+          //       ),
+          //     ],
+          //   ),
+          // ),
           FutureBuilder<List<Campaign>>(
             future: _donasiApprovedFuture,
             builder: (context, snapshot) {
