@@ -18,7 +18,8 @@ class UserDatabase {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
+    // Versi DITINGGIKAN ke 3 agar migrasi avatarAsset dijalankan
+    return await openDatabase(path, version: 3, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -29,7 +30,8 @@ class UserDatabase {
       email TEXT NOT NULL,
       password TEXT NOT NULL,
       phone TEXT,
-      country TEXT
+      country TEXT,
+      avatarAsset TEXT
     )
     ''');
   }
@@ -38,6 +40,10 @@ class UserDatabase {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE users ADD COLUMN phone TEXT;');
       await db.execute('ALTER TABLE users ADD COLUMN country TEXT;');
+    }
+    // Tambahkan migrasi avatarAsset
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE users ADD COLUMN avatarAsset TEXT;');
     }
   }
 

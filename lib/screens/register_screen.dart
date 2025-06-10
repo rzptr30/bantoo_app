@@ -54,11 +54,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      // Simpan user ke SQLite
+      // Simpan user ke SQLite, tambahkan avatarAsset default
       final user = User(
         username: _controllerUsername.text.trim(),
         email: _controllerEmail.text.trim(),
         password: _controllerPass.text.trim(),
+        avatarAsset: 'default_avatar.png', // <--- Penambahan baris ini
       );
       await UserDatabase.instance.createUser(user);
 

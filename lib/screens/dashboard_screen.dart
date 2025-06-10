@@ -441,7 +441,7 @@ class __DashboardHomeState extends State<_DashboardHome> {
           Padding(
             padding: const EdgeInsets.only(bottom: 18),
             child: Text(
-              "Copyright © 2025 Kitabisa. All Rights Reserved",
+              "Copyright © 2025 Bantoo. All Rights Reserved",
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ),

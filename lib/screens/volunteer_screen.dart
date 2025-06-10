@@ -227,7 +227,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
             ),
             const SizedBox(height: 12),
             const Text(
-              "Copyright © 2025 Kitabisa. All Rights Reserved",
+              "Copyright © 2025 Bantoo. All Rights Reserved",
               style: TextStyle(color: Colors.grey, fontSize: 13),
               textAlign: TextAlign.center,
             ),
