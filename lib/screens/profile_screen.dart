@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'user_info_screen.dart';
-import 'user_campaign_archive_screen.dart';
+import 'archive_campaign_screen.dart';
 import 'transaction_history_screen.dart';
 import '../db/campaign_database.dart';
 import 'login_screen.dart';
 import 'my_campaigns_screen.dart';
-import 'admin_campaign_approval_screen.dart'; // Tambahkan import ini
+import 'admin_campaign_approval_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -40,18 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             context,
             MaterialPageRoute(
               builder: (_) => MyCampaignsScreen(creator: widget.username),
-            ),
-          );
-        },
-      },
-      {
-        'icon': Icons.archive,
-        'label': 'Campaign Archive',
-        'onTap': () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => UserCampaignArchiveScreen(username: widget.username),
             ),
           );
         },
@@ -149,6 +137,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => AdminCampaignApprovalScreen()),
+          );
+        },
+      });
+      _menuItems.insert(1, {
+        'icon': Icons.archive,
+        'label': 'Campaign Archive',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ArchiveCampaignScreen()),
           );
         },
       });

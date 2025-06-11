@@ -172,7 +172,19 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                   Text('Lokasi: ${data.location}'),
                   Text('Tanggal: ${_formatDate(data.eventDate)}'),
                   Text('Kuota: ${data.quota}'),
-                  Text('Biaya: ${data.fee}'),
+                  // Text('Biaya: ${data.fee}'),
+                  if (data.terms != null && data.terms.isNotEmpty) ...[
+                 Divider(),
+                   Text("Terms & Conditions", style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 6),
+                   Text(data.terms),
+                  ],  
+                  if (data.disclaimer != null && data.disclaimer.isNotEmpty) ...[
+  Divider(),
+  Text("Disclaimer", style: TextStyle(fontWeight: FontWeight.bold)),
+  SizedBox(height: 6),
+  Text(data.disclaimer),
+                    ],
                   SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

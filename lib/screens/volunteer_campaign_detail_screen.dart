@@ -31,7 +31,7 @@ class VolunteerCampaignDetailScreen extends StatelessWidget {
             SizedBox(height: 6),
             Text("Lokasi: ${campaign.location}"),
             Text("Kuota: ${campaign.quota}"),
-            Text("Biaya: ${campaign.fee}"),
+            // Text("Biaya: ${campaign.fee}"),
             Text("Tanggal Event: ${campaign.eventDate.day}/${campaign.eventDate.month}/${campaign.eventDate.year}"),
             Text("Oprec: ${campaign.registrationStart.day}/${campaign.registrationStart.month}/${campaign.registrationStart.year} - ${campaign.registrationEnd.day}/${campaign.registrationEnd.month}/${campaign.registrationEnd.year}"),
             SizedBox(height: 16),

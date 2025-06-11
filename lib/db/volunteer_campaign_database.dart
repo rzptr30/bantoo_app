@@ -167,4 +167,15 @@ class VolunteerCampaignDatabase {
     );
     return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
   }
+  // Tambahan untuk arsip volunteer
+Future<List<VolunteerCampaign>> getArchivedVolunteerCampaigns() async {
+  final db = await instance.database;
+  final result = await db.query(
+    'volunteer_campaigns',
+    where: 'status = ? OR status = ?',
+    whereArgs: ['approved', 'rejected'],
+    orderBy: 'id DESC',
+  );
+  return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
+}
 }

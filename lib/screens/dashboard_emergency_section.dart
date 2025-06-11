@@ -72,41 +72,44 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Campaign>>(
-      future: _campaignsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-        final campaigns = snapshot.data ?? [];
-        if (campaigns.isEmpty) {
-          // Tidak menampilkan apapun jika kosong
-          return SizedBox.shrink();
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-              child: Row(
-                children: [
-                  Text(
-                    "Emergency Bantoo!",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                      color: Color(0xFF183B56),
-                    ),
-                  ),
-                  Spacer(),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text("View all"),
-                  ),
-                ],
+    // Bagian judul & tombol selalu muncul
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+          child: Row(
+            children: [
+              Text(
+                "Emergency Bantoo!",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: Color(0xFF183B56),
+                ),
               ),
-            ),
-            SizedBox(
+              Spacer(),
+              TextButton(
+                onPressed: () {}, // TODO: ganti dengan aksi view all yang sesuai
+                child: Text("View all"),
+              ),
+            ],
+          ),
+        ),
+        FutureBuilder<List<Campaign>>(
+          future: _campaignsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+            final campaigns = snapshot.data ?? [];
+            if (campaigns.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                child: Text("Tidak ada campaign donasi emergency."),
+              );
+            }
+            return SizedBox(
               height: 250,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -250,10 +253,10 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                   );
                 },
               ),
-            ),
-          ],
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 }

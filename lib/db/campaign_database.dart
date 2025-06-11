@@ -136,6 +136,17 @@ class CampaignDatabase {
     return result.map((map) => Campaign.fromMap(map)).toList();
   }
 
+  Future<List<Campaign>> getArchivedCampaigns() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'campaigns',
+      where: 'status = ? OR status = ?',
+      whereArgs: ['approved', 'rejected'],
+      orderBy: 'id DESC',
+    );
+    return result.map((map) => Campaign.fromMap(map)).toList();
+  }
+
   Future<int> updateCampaignStatus(int id, String status) async {
     final db = await instance.database;
     return await db.update('campaigns', {'status': status}, where: 'id = ?', whereArgs: [id]);
@@ -240,14 +251,14 @@ class CampaignDatabase {
     await db.delete('campaigns');
   }
   Future<List<Campaign>> getActiveDonasiCampaigns() async {
-  final db = await instance.database;
-  final nowIso = DateTime.now().toIso8601String();
-  final result = await db.query(
-    'campaigns',
-    where: 'status = ? AND endDate >= ?',
-    whereArgs: ['approved', nowIso],
-    orderBy: 'id DESC',
-  );
-  return result.map((map) => Campaign.fromMap(map)).toList();
-}
+    final db = await instance.database;
+    final nowIso = DateTime.now().toIso8601String();
+    final result = await db.query(
+      'campaigns',
+      where: 'status = ? AND endDate >= ?',
+      whereArgs: ['approved', nowIso],
+      orderBy: 'id DESC',
+    );
+    return result.map((map) => Campaign.fromMap(map)).toList();
+  }
 }

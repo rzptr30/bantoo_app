@@ -21,7 +21,7 @@ class _EditVolunteerCampaignScreenState extends State<EditVolunteerCampaignScree
   late TextEditingController _descController;
   late TextEditingController _lokasiController;
   late TextEditingController _kuotaController;
-  late TextEditingController _biayaController;
+  // late TextEditingController _biayaController;
   DateTime? _selectedDate;
   File? _selectedImage;
   bool _isSubmitting = false;
@@ -33,7 +33,7 @@ class _EditVolunteerCampaignScreenState extends State<EditVolunteerCampaignScree
     _descController = TextEditingController(text: widget.campaign.description);
     _lokasiController = TextEditingController(text: widget.campaign.location);
     _kuotaController = TextEditingController(text: widget.campaign.quota);
-    _biayaController = TextEditingController(text: widget.campaign.fee);
+    // _biayaController = TextEditingController(text: widget.campaign.fee);
     _selectedDate = widget.campaign.eventDate;
     _selectedImage = File(widget.campaign.imagePath);
   }
@@ -97,7 +97,7 @@ class _EditVolunteerCampaignScreenState extends State<EditVolunteerCampaignScree
         _descController.text.isEmpty ||
         _lokasiController.text.isEmpty ||
         _kuotaController.text.isEmpty ||
-        _biayaController.text.isEmpty ||
+        // _biayaController.text.isEmpty ||
         _selectedDate == null ||
         _selectedImage == null) {
       ScaffoldMessenger.of(this.context).showSnackBar(
@@ -112,7 +112,7 @@ class _EditVolunteerCampaignScreenState extends State<EditVolunteerCampaignScree
       description: _descController.text,
       location: _lokasiController.text,
       quota: _kuotaController.text,
-      fee: _biayaController.text,
+      // fee: _biayaController.text,
       eventDate: _selectedDate!,
       imagePath: _selectedImage!.path,
     );
@@ -212,8 +212,8 @@ class _EditVolunteerCampaignScreenState extends State<EditVolunteerCampaignScree
             ),
             SizedBox(height: 16),
             TextField(
-              controller: _biayaController,
-              decoration: InputDecoration(labelText: "Biaya (cth: Gratis)"),
+              // controller: _biayaController,
+              // decoration: InputDecoration(labelText: "Biaya (cth: Gratis)"),
             ),
             SizedBox(height: 32),
             Center(
