@@ -3,6 +3,8 @@ import '../db/volunteer_registration_database.dart';
 import '../db/volunteer_campaign_database.dart';
 import '../models/volunteer_registration.dart';
 import '../models/volunteer_campaign.dart';
+// Import screen detail volunteer campaign di sini!
+import 'volunteer_campaign_detail_screen.dart';
 
 class MyVolunteerHistoryScreen extends StatefulWidget {
   final String username;
@@ -72,7 +74,7 @@ class _MyVolunteerHistoryScreenState extends State<MyVolunteerHistoryScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Tanggal Daftar: ${reg.registeredAt.day}/${reg.registeredAt.month}/${reg.registeredAt.year}'),
+                      Text('Tanggal Daftar: ${reg.registeredAt.day.toString().padLeft(2, '0')}/${reg.registeredAt.month.toString().padLeft(2, '0')}/${reg.registeredAt.year}'),
                       _buildStatusChip(reg.status),
                       if (reg.status == "rejected" && reg.adminFeedback != null && reg.adminFeedback!.trim().isNotEmpty)
                         Padding(
@@ -84,6 +86,20 @@ class _MyVolunteerHistoryScreenState extends State<MyVolunteerHistoryScreen> {
                         ),
                     ],
                   ),
+                  // Tambahan: klik menuju detail volunteer campaign
+                  onTap: campaign != null
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VolunteerCampaignDetailScreen(
+                                campaign: campaign,
+                                // Tambahkan parameter lain jika diperlukan
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
                 ),
               );
             },

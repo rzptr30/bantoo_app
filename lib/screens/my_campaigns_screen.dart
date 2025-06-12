@@ -254,7 +254,10 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => MyVolunteerCampaignDetailScreen(campaign: v),
+                builder: (_) => MyVolunteerCampaignDetailScreen(
+                  campaign: v,
+                  currentUsername: widget.creator, // <-- Tambahkan ini agar tidak error!
+                ),
               ),
             );
           },
@@ -295,7 +298,6 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
                         ),
                       ),
                     ),
-                  // Tampilkan feedback jika status rejected dan ada adminFeedback
                   if (v.status == "rejected" && v.adminFeedback != null && v.adminFeedback!.trim().isNotEmpty)
                     Container(
                       margin: EdgeInsets.only(top: 12, bottom: 4),

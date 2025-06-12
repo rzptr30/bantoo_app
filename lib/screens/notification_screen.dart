@@ -11,6 +11,7 @@ import 'admin_campaign_approval_screen.dart';
 // Tambahkan import berikut:
 import 'my_campaign_detail_screen.dart';
 import 'my_volunteer_campaign_detail_screen.dart';
+import 'volunteer_applicant_list_screen.dart'; // <--- Tambahkan ini
 
 class NotificationScreen extends StatelessWidget {
   final String username;
@@ -18,10 +19,8 @@ class NotificationScreen extends StatelessWidget {
 
   Future<void> _onNotifTap(BuildContext context, NotificationItem notif) async {
     if (notif.type == 'donation_new' || notif.type == 'volunteer_approved') {
-      // Ambil campaignId
       final campaignId = int.tryParse(notif.relatedId ?? '');
       if (campaignId != null) {
-        // Ambil data campaign dari database
         final campaign = await CampaignDatabase.instance.getCampaignById(campaignId);
         if (campaign != null) {
           Navigator.push(
@@ -39,20 +38,24 @@ class NotificationScreen extends StatelessWidget {
     } else if (notif.type == 'volunteer_new') {
       final campaignId = int.tryParse(notif.relatedId ?? '');
       if (campaignId != null) {
-        // Asumsi currentUsername dan campaignCreator sama dengan username
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => VolunteerListScreen(
-              campaignId: campaignId,
-              currentUsername: username,
-              campaignCreator: username,
+        final vCampaign = await VolunteerCampaignDatabase.instance.getCampaignById(campaignId);
+        if (vCampaign != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VolunteerApplicantListScreen(
+                campaignId: vCampaign.id!,
+                campaignTitle: vCampaign.title,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Campaign volunteer tidak ditemukan')),
+          );
+        }
       }
     } else if (notif.type == 'campaign_pending') {
-      // Langsung buka halaman approval admin tanpa parameter
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -60,10 +63,8 @@ class NotificationScreen extends StatelessWidget {
         ),
       );
     } else if (notif.type == 'campaign_approved' || notif.type == 'campaign_rejected') {
-      // Cek donasi atau volunteer, lalu buka detail campaign user
       final campaignId = int.tryParse(notif.relatedId ?? '');
       if (campaignId != null) {
-        // Cek donasi dulu
         final campaign = await CampaignDatabase.instance.getCampaignById(campaignId);
         if (campaign != null) {
           Navigator.push(
@@ -74,19 +75,20 @@ class NotificationScreen extends StatelessWidget {
           );
           return;
         }
-        // Jika volunteer
         final vCampaign = await VolunteerCampaignDatabase.instance.getCampaignById(campaignId);
         if (vCampaign != null) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => MyVolunteerCampaignDetailScreen(campaign: vCampaign),
+              builder: (context) => MyVolunteerCampaignDetailScreen(
+                campaign: vCampaign,
+                currentUsername: username, // <--- Tambahkan jika perlu
+              ),
             ),
           );
           return;
         }
       }
-      // Fallback: buka halaman "Campaign Saya"
       Navigator.pushNamed(context, '/my_campaigns');
     }
     // Untuk type lain, bisa tambahkan navigasi lain

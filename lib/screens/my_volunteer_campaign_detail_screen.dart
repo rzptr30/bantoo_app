@@ -1,16 +1,25 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/volunteer_campaign.dart';
+import 'volunteer_applicant_list_screen.dart'; // <- pastikan sudah import
 
 class MyVolunteerCampaignDetailScreen extends StatelessWidget {
   final VolunteerCampaign campaign;
-  const MyVolunteerCampaignDetailScreen({required this.campaign});
+  final String currentUsername; // <-- WAJIB
+
+  const MyVolunteerCampaignDetailScreen({
+    required this.campaign,
+    required this.currentUsername,
+    Key? key,
+  }) : super(key: key);
 
   String _formatDate(DateTime dt) =>
       "${dt.day}/${dt.month}/${dt.year}";
 
   @override
   Widget build(BuildContext context) {
+    final bool isCreator = campaign.creator == currentUsername; // <-- ganti di sini
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Detail Campaign Volunteer'),
@@ -63,7 +72,6 @@ class MyVolunteerCampaignDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 5),
                 child: Text("Disclaimer: ${campaign.disclaimer}"),
               ),
-            // Feedback jika rejected
             if (campaign.status == "rejected" &&
                 campaign.adminFeedback != null &&
                 campaign.adminFeedback!.trim().isNotEmpty)
@@ -90,6 +98,28 @@ class MyVolunteerCampaignDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
+            // ==== TOMBOL LIHAT PENDAFTAR (hanya untuk creator) ====
+            if (isCreator) ...[
+              SizedBox(height: 24),
+              Center(
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.people),
+                  label: Text("Lihat Pendaftar"),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => VolunteerApplicantListScreen(
+                          campaignId: campaign.id!,
+                          campaignTitle: campaign.title,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+            // =======================================================
           ],
         ),
       ),
