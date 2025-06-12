@@ -20,14 +20,9 @@ class VolunteerCampaignDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
-      // onUpgrade untuk migrasi jika sudah pernah buat DB sebelumnya
-      onUpgrade: (db, oldVersion, newVersion) async {
-        // Pastikan kolom sudah ada
-        await db.execute('ALTER TABLE volunteer_campaigns ADD COLUMN terms TEXT;');
-        await db.execute('ALTER TABLE volunteer_campaigns ADD COLUMN disclaimer TEXT;');
-      },
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -48,9 +43,24 @@ class VolunteerCampaignDatabase {
         registrationStart TEXT NOT NULL,
         registrationEnd TEXT NOT NULL,
         terms TEXT,
-        disclaimer TEXT
+        disclaimer TEXT,
+        adminFeedback TEXT
       )
     ''');
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      try {
+        await db.execute('ALTER TABLE volunteer_campaigns ADD COLUMN terms TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE volunteer_campaigns ADD COLUMN disclaimer TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE volunteer_campaigns ADD COLUMN adminFeedback TEXT;');
+      } catch (_) {}
+    }
   }
 
   Future<int> insert(VolunteerCampaign campaign) async {
@@ -132,6 +142,16 @@ class VolunteerCampaignDatabase {
     );
   }
 
+  Future<int> updateFeedback(int id, String feedback) async {
+    final db = await instance.database;
+    return await db.update(
+      'volunteer_campaigns',
+      {'adminFeedback': feedback},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<int> updateStatus(int id, String status) async {
     final db = await instance.database;
     return await db.update(
@@ -167,15 +187,16 @@ class VolunteerCampaignDatabase {
     );
     return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
   }
+
   // Tambahan untuk arsip volunteer
-Future<List<VolunteerCampaign>> getArchivedVolunteerCampaigns() async {
-  final db = await instance.database;
-  final result = await db.query(
-    'volunteer_campaigns',
-    where: 'status = ? OR status = ?',
-    whereArgs: ['approved', 'rejected'],
-    orderBy: 'id DESC',
-  );
-  return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
-}
+  Future<List<VolunteerCampaign>> getArchivedVolunteerCampaigns() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'volunteer_campaigns',
+      where: 'status = ? OR status = ?',
+      whereArgs: ['approved', 'rejected'],
+      orderBy: 'id DESC',
+    );
+    return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
+  }
 }

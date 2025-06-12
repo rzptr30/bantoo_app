@@ -14,6 +14,7 @@ class VolunteerCampaign {
   final DateTime registrationEnd;
   final String terms;       // NEW
   final String disclaimer;  // NEW
+  final String? adminFeedback; // alasan/feedback dari admin (opsional, hanya jika rejected)
 
   VolunteerCampaign({
     this.id,
@@ -29,8 +30,9 @@ class VolunteerCampaign {
     required this.createdAt,
     required this.registrationStart,
     required this.registrationEnd,
-    required this.terms,        // NEW
-    required this.disclaimer,   // NEW
+    required this.terms,
+    required this.disclaimer,
+    this.adminFeedback,
   });
 
   Map<String, dynamic> toMap() {
@@ -48,8 +50,9 @@ class VolunteerCampaign {
       'createdAt': createdAt.toIso8601String(),
       'registrationStart': registrationStart.toIso8601String(),
       'registrationEnd': registrationEnd.toIso8601String(),
-      'terms': terms,              // NEW
-      'disclaimer': disclaimer,    // NEW
+      'terms': terms,
+      'disclaimer': disclaimer,
+      'adminFeedback': adminFeedback,
     };
   }
 
@@ -68,8 +71,9 @@ class VolunteerCampaign {
       createdAt: DateTime.parse(map['createdAt']),
       registrationStart: DateTime.parse(map['registrationStart']),
       registrationEnd: DateTime.parse(map['registrationEnd']),
-      terms: map['terms'] ?? '',             // NEW
-      disclaimer: map['disclaimer'] ?? '',   // NEW
+      terms: map['terms'] ?? '',
+      disclaimer: map['disclaimer'] ?? '',
+      adminFeedback: map['adminFeedback'],
     );
   }
 
@@ -87,8 +91,9 @@ class VolunteerCampaign {
     DateTime? createdAt,
     DateTime? registrationStart,
     DateTime? registrationEnd,
-    String? terms,         // NEW
-    String? disclaimer,    // NEW
+    String? terms,
+    String? disclaimer,
+    String? adminFeedback,
   }) {
     return VolunteerCampaign(
       id: id ?? this.id,
@@ -106,6 +111,7 @@ class VolunteerCampaign {
       registrationEnd: registrationEnd ?? this.registrationEnd,
       terms: terms ?? this.terms,
       disclaimer: disclaimer ?? this.disclaimer,
+      adminFeedback: adminFeedback ?? this.adminFeedback,
     );
   }
 }

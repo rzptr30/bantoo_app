@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../db/campaign_database.dart';
 import '../models/campaign.dart';
+import '../db/notification_database.dart';
+import '../models/notification_item.dart';
 
 class AddCampaignScreen extends StatefulWidget {
   final String creator;
@@ -88,7 +90,20 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
       status: "pending",
       creator: widget.creator,
     );
-    await CampaignDatabase.instance.insertCampaign(campaign);
+    // Simpan dan dapatkan id campaign baru
+    final int campaignId = await CampaignDatabase.instance.insertCampaign(campaign);
+
+    // === Tambahkan notifikasi ke admin ===
+    await NotificationDatabase.instance.insertNotification(
+      NotificationItem(
+        user: 'admin',
+        message: 'Campaign donasi baru diajukan: "${campaign.title}" oleh ${widget.creator}',
+        date: DateTime.now(),
+        type: 'campaign_pending',
+        relatedId: campaignId.toString(),
+      ),
+    );
+
     ScaffoldMessenger.of(this.context).showSnackBar(
       SnackBar(content: Text('Campaign berhasil diajukan! Menunggu ACC Admin.'))
     );

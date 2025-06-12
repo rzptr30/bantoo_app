@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../db/volunteer_campaign_database.dart';
 import '../models/volunteer_campaign.dart';
+import '../db/notification_database.dart';
+import '../models/notification_item.dart';
 
 class RequestCampaignScreen extends StatefulWidget {
   final String creator;
@@ -162,7 +164,19 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         disclaimer: _disclaimerController.text,
       );
 
-      await VolunteerCampaignDatabase.instance.insert(campaign);
+      // Simpan dan dapatkan id campaign baru
+      final int campaignId = await VolunteerCampaignDatabase.instance.insert(campaign);
+
+      // === Tambahkan notifikasi ke admin ===
+      await NotificationDatabase.instance.insertNotification(
+        NotificationItem(
+          user: 'admin',
+          message: 'Campaign volunteer baru diajukan: "${campaign.title}" oleh ${widget.creator}',
+          date: DateTime.now(),
+          type: 'campaign_pending',
+          relatedId: campaignId.toString(),
+        ),
+      );
 
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(this.context).showSnackBar(

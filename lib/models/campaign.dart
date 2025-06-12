@@ -8,6 +8,7 @@ class Campaign {
   String imagePath;
   String status;    // pending, approved, rejected
   String creator;   // username/email pembuat campaign
+  String? adminFeedback; // alasan/feedback dari admin (opsional, hanya jika rejected)
 
   Campaign({
     this.id,
@@ -19,6 +20,7 @@ class Campaign {
     required this.imagePath,
     required this.status,
     required this.creator,
+    this.adminFeedback,
   });
 
   Map<String, dynamic> toMap() {
@@ -32,6 +34,7 @@ class Campaign {
       'imagePath': imagePath,
       'status': status,
       'creator': creator,
+      'adminFeedback': adminFeedback,
     };
   }
 
@@ -46,10 +49,10 @@ class Campaign {
       imagePath: map['imagePath'],
       status: map['status'] ?? 'pending',
       creator: map['creator'] ?? '',
+      adminFeedback: map['adminFeedback'],
     );
   }
 
-  // Tambah method copyWith
   Campaign copyWith({
     int? id,
     String? title,
@@ -60,6 +63,7 @@ class Campaign {
     String? imagePath,
     String? status,
     String? creator,
+    String? adminFeedback,
   }) {
     return Campaign(
       id: id ?? this.id,
@@ -71,6 +75,7 @@ class Campaign {
       imagePath: imagePath ?? this.imagePath,
       status: status ?? this.status,
       creator: creator ?? this.creator,
+      adminFeedback: adminFeedback ?? this.adminFeedback,
     );
   }
 }

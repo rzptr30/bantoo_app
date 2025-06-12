@@ -7,6 +7,8 @@ import '../db/campaign_database.dart';
 import 'login_screen.dart';
 import 'my_campaigns_screen.dart';
 import 'admin_campaign_approval_screen.dart';
+// Tambahkan import berikut:
+import 'my_volunteer_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -63,7 +65,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {
         'icon': Icons.volunteer_activism,
         'label': 'Volunteer History',
-        'onTap': () {},
+        'onTap': () {
+          // Integrasi Volunteer History
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MyVolunteerHistoryScreen(username: widget.username),
+            ),
+          );
+        },
       },
       {
         'icon': Icons.history,

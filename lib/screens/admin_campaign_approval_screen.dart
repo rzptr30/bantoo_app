@@ -4,6 +4,8 @@ import '../db/campaign_database.dart';
 import '../db/volunteer_campaign_database.dart';
 import '../models/campaign.dart';
 import '../models/volunteer_campaign.dart';
+import '../db/notification_database.dart';
+import '../models/notification_item.dart';
 
 class AdminCampaignApprovalScreen extends StatefulWidget {
   @override
@@ -41,16 +43,98 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
     });
   }
 
-  Future<void> _handleApproval(_PendingCampaign campaign, bool isApprove) async {
+  Future<void> _handleApproval(_PendingCampaign campaign, bool isApprove, {String? feedback}) async {
+    // 1. Update status & feedback di DB
     if (campaign.isDonasi) {
-      await CampaignDatabase.instance.updateStatus(campaign.donasi!.id!, isApprove ? 'approved' : 'rejected');
+      final Campaign data = campaign.donasi!;
+      await CampaignDatabase.instance.updateStatus(data.id!, isApprove ? 'approved' : 'rejected');
+      await CampaignDatabase.instance.updateCampaignFeedback(data.id!, isApprove ? "" : (feedback ?? ''));
+      // 2. Notifikasi ke user
+      await NotificationDatabase.instance.insertNotification(
+        NotificationItem(
+          user: data.creator,
+          message: isApprove
+              ? 'Campaign donasi "${data.title}" kamu telah di-ACC Admin!'
+              : 'Campaign donasi "${data.title}" kamu ditolak. Feedback: ${(feedback ?? '')}',
+          date: DateTime.now(),
+          type: isApprove ? 'campaign_approved' : 'campaign_rejected',
+          relatedId: data.id?.toString(),
+        ),
+      );
     } else {
-      await VolunteerCampaignDatabase.instance.updateStatus(campaign.volunteer!.id!, isApprove ? 'approved' : 'rejected');
+      final VolunteerCampaign data = campaign.volunteer!;
+      await VolunteerCampaignDatabase.instance.updateStatus(data.id!, isApprove ? 'approved' : 'rejected');
+      await VolunteerCampaignDatabase.instance.updateFeedback(data.id!, isApprove ? "" : (feedback ?? ''));
+      // 2. Notifikasi ke user
+      await NotificationDatabase.instance.insertNotification(
+        NotificationItem(
+          user: data.creator,
+          message: isApprove
+              ? 'Campaign volunteer "${data.title}" kamu telah di-ACC Admin!'
+              : 'Campaign volunteer "${data.title}" kamu ditolak. Feedback: ${(feedback ?? '')}',
+          date: DateTime.now(),
+          type: isApprove ? 'campaign_approved' : 'campaign_rejected',
+          relatedId: data.id?.toString(),
+        ),
+      );
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(isApprove ? "Campaign di-approve!" : "Campaign di-reject!")),
     );
     await _fetchPendingCampaigns();
+  }
+
+  Future<void> _showRejectDialog(_PendingCampaign campaign) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool submitting = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text("Tolak Campaign"),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            minLines: 2,
+            maxLines: 5,
+            decoration: InputDecoration(
+              labelText: "Alasan/Feedback penolakan (wajib)",
+              border: OutlineInputBorder(),
+            ),
+            validator: (val) =>
+                val == null || val.trim().isEmpty ? "Feedback wajib diisi!" : null,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), // batal
+            child: Text("Batal"),
+          ),
+          StatefulBuilder(
+            builder: (ctx, setState) => ElevatedButton(
+              onPressed: submitting
+                  ? null
+                  : () async {
+                      if (formKey.currentState!.validate()) {
+                        setState(() => submitting = true);
+                        Navigator.pop(context); // Tutup dialog
+                        await _handleApproval(campaign, false, feedback: controller.text.trim());
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: submitting
+                  ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text("Tolak Campaign"),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showDetailDialog(_PendingCampaign campaign) {
@@ -107,7 +191,7 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                         label: Text('Reject', style: TextStyle(color: Colors.red)),
                         onPressed: () {
                           Navigator.pop(context);
-                          _handleApproval(campaign, false);
+                          _showRejectDialog(campaign);
                         },
                       ),
                       SizedBox(width: 8),
@@ -118,9 +202,9 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                           backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(context);
-                          _handleApproval(campaign, true);
+                          await _handleApproval(campaign, true);
                         },
                       ),
                     ],
@@ -172,19 +256,18 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                   Text('Lokasi: ${data.location}'),
                   Text('Tanggal: ${_formatDate(data.eventDate)}'),
                   Text('Kuota: ${data.quota}'),
-                  // Text('Biaya: ${data.fee}'),
                   if (data.terms != null && data.terms.isNotEmpty) ...[
-                 Divider(),
-                   Text("Terms & Conditions", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Divider(),
+                    Text("Terms & Conditions", style: TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: 6),
-                   Text(data.terms),
-                  ],  
+                    Text(data.terms),
+                  ],
                   if (data.disclaimer != null && data.disclaimer.isNotEmpty) ...[
-  Divider(),
-  Text("Disclaimer", style: TextStyle(fontWeight: FontWeight.bold)),
-  SizedBox(height: 6),
-  Text(data.disclaimer),
-                    ],
+                    Divider(),
+                    Text("Disclaimer", style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 6),
+                    Text(data.disclaimer),
+                  ],
                   SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -194,7 +277,7 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                         label: Text('Reject', style: TextStyle(color: Colors.red)),
                         onPressed: () {
                           Navigator.pop(context);
-                          _handleApproval(campaign, false);
+                          _showRejectDialog(campaign);
                         },
                       ),
                       SizedBox(width: 8),
@@ -205,9 +288,9 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                           backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(context);
-                          _handleApproval(campaign, true);
+                          await _handleApproval(campaign, true);
                         },
                       ),
                     ],
@@ -249,7 +332,7 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                         imagePath: c.imagePath,
                         extra: "Target Donasi: Rp ${c.targetFund}",
                         onDetail: () => _showDetailDialog(campaign),
-                        onReject: () => _handleApproval(campaign, false),
+                        onReject: () => _showRejectDialog(campaign),
                         onApprove: () => _handleApproval(campaign, true),
                       );
                     } else {
@@ -264,7 +347,7 @@ class _AdminCampaignApprovalScreenState extends State<AdminCampaignApprovalScree
                         imagePath: v.imagePath,
                         extra: "Lokasi: ${v.location}, Kuota: ${v.quota}, Biaya: ${v.fee}",
                         onDetail: () => _showDetailDialog(campaign),
-                        onReject: () => _handleApproval(campaign, false),
+                        onReject: () => _showRejectDialog(campaign),
                         onApprove: () => _handleApproval(campaign, true),
                       );
                     }

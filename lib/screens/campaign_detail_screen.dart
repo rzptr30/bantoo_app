@@ -6,6 +6,9 @@ import '../models/campaign.dart';
 import '../models/donation.dart';
 import '../models/doa.dart';
 import '../db/campaign_database.dart';
+import '../db/notification_database.dart';
+import '../models/notification_item.dart';
+import '../db/campaign_database.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final Campaign campaign;
@@ -204,6 +207,21 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     );
                     await CampaignDatabase.instance.insertDoa(doa);
                   }
+
+                  // === UPDATE: Notifikasi ke creator campaign ===
+                  final campaignData = await CampaignDatabase.instance.getCampaignById(widget.campaign.id!);
+                  // Jangan kirim notifikasi ke diri sendiri
+                  if (campaignData != null && campaignData.creator != username) {
+                    await NotificationDatabase.instance.insertNotification(NotificationItem(
+                      user: campaignData.creator,
+                      message: 'Ada donasi baru untuk campaign "${campaignData.title}" dari ${isAnonim ? "Orang Baik" : username} sebesar Rp${nominal}.',
+                      date: DateTime.now(),
+                      type: 'donation_new',
+                      relatedId: widget.campaign.id!.toString(),
+                    ));
+                  }
+                  // === END UPDATE ===
+
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Donasi berhasil! Terima kasih sudah berdonasi lewat $m.")),

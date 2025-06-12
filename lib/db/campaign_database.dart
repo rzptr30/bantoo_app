@@ -22,7 +22,7 @@ class CampaignDatabase {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -39,7 +39,8 @@ class CampaignDatabase {
         endDate TEXT NOT NULL,
         imagePath TEXT NOT NULL,
         status TEXT NOT NULL,
-        creator TEXT NOT NULL
+        creator TEXT NOT NULL,
+        adminFeedback TEXT
       )
     ''');
 
@@ -103,6 +104,11 @@ class CampaignDatabase {
         await db.execute('ALTER TABLE donations ADD COLUMN isAnonim INTEGER NOT NULL DEFAULT 0;');
       } catch (_) {}
     }
+    if (oldVersion < 6) {
+      try {
+        await db.execute('ALTER TABLE campaigns ADD COLUMN adminFeedback TEXT;');
+      } catch (_) {}
+    }
   }
 
   // === CAMPAIGN ===
@@ -150,6 +156,12 @@ class CampaignDatabase {
   Future<int> updateCampaignStatus(int id, String status) async {
     final db = await instance.database;
     return await db.update('campaigns', {'status': status}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Update feedback admin
+  Future<int> updateCampaignFeedback(int id, String feedback) async {
+    final db = await instance.database;
+    return await db.update('campaigns', {'adminFeedback': feedback}, where: 'id = ?', whereArgs: [id]);
   }
 
   // Alias agar bisa dipanggil sebagai updateStatus juga

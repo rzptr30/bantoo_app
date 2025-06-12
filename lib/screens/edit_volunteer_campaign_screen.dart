@@ -115,6 +115,8 @@ class _EditVolunteerCampaignScreenState extends State<EditVolunteerCampaignScree
       // fee: _biayaController.text,
       eventDate: _selectedDate!,
       imagePath: _selectedImage!.path,
+      status: "pending",         // <-- Set status ke pending
+      adminFeedback: null,       // <-- Hapus feedback admin
     );
 
     await VolunteerCampaignDatabase.instance.update(updated);

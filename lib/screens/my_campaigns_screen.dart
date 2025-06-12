@@ -6,6 +6,8 @@ import '../models/campaign.dart';
 import '../models/volunteer_campaign.dart';
 import 'edit_campaign_screen.dart';
 import 'edit_volunteer_campaign_screen.dart';
+import 'my_campaign_detail_screen.dart';
+import 'my_volunteer_campaign_detail_screen.dart';
 
 class MyCampaignsScreen extends StatefulWidget {
   final String creator;
@@ -144,62 +146,96 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
       padding: EdgeInsets.all(16),
       itemBuilder: (context, idx) {
         final c = _donasiCampaigns[idx];
-        return Card(
-          margin: EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _buildStatusChip(c.status),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  c.title,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-                ),
-                SizedBox(height: 4),
-                Text(c.description, maxLines: 2, overflow: TextOverflow.ellipsis),
-                SizedBox(height: 10),
-                Text("Target Donasi: Rp ${c.targetFund}"),
-                Text("Terkumpul: Rp ${c.collectedFund}"),
-                Text("Batas: ${c.endDate}"),
-                if (c.imagePath.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(c.imagePath),
-                        width: double.infinity,
-                        height: 80,
-                        fit: BoxFit.cover,
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MyCampaignDetailScreen(campaign: c),
+              ),
+            );
+          },
+          child: Card(
+            margin: EdgeInsets.only(bottom: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildStatusChip(c.status),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    c.title,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  ),
+                  SizedBox(height: 4),
+                  Text(c.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  SizedBox(height: 10),
+                  Text("Target Donasi: Rp ${c.targetFund}"),
+                  Text("Terkumpul: Rp ${c.collectedFund}"),
+                  Text("Batas: ${c.endDate}"),
+                  if (c.imagePath.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(c.imagePath),
+                          width: double.infinity,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
+                  // Tampilkan feedback jika status rejected dan ada adminFeedback
+                  if (c.status == "rejected" && c.adminFeedback != null && c.adminFeedback!.trim().isNotEmpty)
+                    Container(
+                      margin: EdgeInsets.only(top: 12, bottom: 4),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        border: Border.all(color: Colors.red),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Campaign ini ditolak oleh admin.\nFeedback: ${c.adminFeedback}",
+                              style: TextStyle(color: Colors.red[700], fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        tooltip: "Edit",
+                        onPressed: (c.status == "pending" || c.status == "rejected")
+                            ? () => _editDonasi(c)
+                            : null,
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        tooltip: "Hapus",
+                        onPressed: (c.status == "pending" || c.status == "rejected")
+                            ? () => _deleteDonasi(c)
+                            : null,
+                      ),
+                    ],
                   ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue),
-                      tooltip: "Edit",
-                      onPressed: (c.status == "pending" || c.status == "rejected")
-                          ? () => _editDonasi(c)
-                          : null,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      tooltip: "Hapus",
-                      onPressed: (c.status == "pending" || c.status == "rejected")
-                          ? () => _deleteDonasi(c)
-                          : null,
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -217,63 +253,97 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
       padding: EdgeInsets.all(16),
       itemBuilder: (context, idx) {
         final v = _volunteerCampaigns[idx];
-        return Card(
-          margin: EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _buildStatusChip(v.status),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  v.title,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-                ),
-                SizedBox(height: 4),
-                Text(v.description, maxLines: 2, overflow: TextOverflow.ellipsis),
-                SizedBox(height: 10),
-                Text("Lokasi: ${v.location}"),
-                Text("Tanggal Event: ${_formatDate(v.eventDate)}"),
-                Text("Kuota: ${v.quota}"),
-                Text("Biaya: ${v.fee}"),
-                if (v.imagePath.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(v.imagePath),
-                        width: double.infinity,
-                        height: 80,
-                        fit: BoxFit.cover,
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MyVolunteerCampaignDetailScreen(campaign: v),
+              ),
+            );
+          },
+          child: Card(
+            margin: EdgeInsets.only(bottom: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildStatusChip(v.status),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    v.title,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  ),
+                  SizedBox(height: 4),
+                  Text(v.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  SizedBox(height: 10),
+                  Text("Lokasi: ${v.location}"),
+                  Text("Tanggal Event: ${_formatDate(v.eventDate)}"),
+                  Text("Kuota: ${v.quota}"),
+                  Text("Biaya: ${v.fee}"),
+                  if (v.imagePath.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(v.imagePath),
+                          width: double.infinity,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
+                  // Tampilkan feedback jika status rejected dan ada adminFeedback
+                  if (v.status == "rejected" && v.adminFeedback != null && v.adminFeedback!.trim().isNotEmpty)
+                    Container(
+                      margin: EdgeInsets.only(top: 12, bottom: 4),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        border: Border.all(color: Colors.red),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Campaign ini ditolak oleh admin.\nFeedback: ${v.adminFeedback}",
+                              style: TextStyle(color: Colors.red[700], fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        tooltip: "Edit",
+                        onPressed: (v.status == "pending" || v.status == "rejected")
+                            ? () => _editVolunteer(v)
+                            : null,
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        tooltip: "Hapus",
+                        onPressed: (v.status == "pending" || v.status == "rejected")
+                            ? () => _deleteVolunteer(v)
+                            : null,
+                      ),
+                    ],
                   ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue),
-                      tooltip: "Edit",
-                      onPressed: (v.status == "pending" || v.status == "rejected")
-                          ? () => _editVolunteer(v)
-                          : null,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      tooltip: "Hapus",
-                      onPressed: (v.status == "pending" || v.status == "rejected")
-                          ? () => _deleteVolunteer(v)
-                          : null,
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
