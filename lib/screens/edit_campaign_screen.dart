@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../models/campaign.dart';
 import '../db/campaign_database.dart';
+import '../db/notification_database.dart';
+import '../models/notification_item.dart';
 
 class EditCampaignScreen extends StatefulWidget {
   final Campaign campaign;
@@ -110,13 +112,26 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
       targetFund: int.tryParse(_targetController.text) ?? widget.campaign.targetFund,
       imagePath: _selectedImage!.path,
       endDate: _endDateController.text,
+      status: "pending",      // PATCH: status jadi pending!
+      adminFeedback: "",      // PATCH: feedback kosong
     );
 
     await CampaignDatabase.instance.update(updatedCampaign);
 
+    // PATCH: kirim notifikasi ke admin
+    await NotificationDatabase.instance.insertNotification(
+      NotificationItem(
+        user: 'admin',
+        message: 'Campaign donasi revisi diajukan: "${updatedCampaign.title}" oleh ${updatedCampaign.creator}',
+        date: DateTime.now(),
+        type: 'campaign_pending',
+        relatedId: updatedCampaign.id?.toString(),
+      ),
+    );
+
     setState(() => _isSubmitting = false);
     ScaffoldMessenger.of(this.context).showSnackBar(
-      SnackBar(content: Text('Campaign donasi berhasil diupdate!')),
+      SnackBar(content: Text('Campaign donasi berhasil diajukan ulang! Menunggu ACC Admin.')),
     );
     Navigator.pop(this.context, true);
   }

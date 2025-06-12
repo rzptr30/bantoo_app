@@ -221,16 +221,12 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue),
                         tooltip: "Edit",
-                        onPressed: (c.status == "pending" || c.status == "rejected")
-                            ? () => _editDonasi(c)
-                            : null,
+                        onPressed: (c.status == "rejected") ? () => _editDonasi(c) : null,
                       ),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         tooltip: "Hapus",
-                        onPressed: (c.status == "pending" || c.status == "rejected")
-                            ? () => _deleteDonasi(c)
-                            : null,
+                        onPressed: (c.status == "rejected") ? () => _deleteDonasi(c) : null,
                       ),
                     ],
                   ),
@@ -329,16 +325,12 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue),
                         tooltip: "Edit",
-                        onPressed: (v.status == "pending" || v.status == "rejected")
-                            ? () => _editVolunteer(v)
-                            : null,
+                        onPressed: (v.status == "rejected") ? () => _editVolunteer(v) : null,
                       ),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         tooltip: "Hapus",
-                        onPressed: (v.status == "pending" || v.status == "rejected")
-                            ? () => _deleteVolunteer(v)
-                            : null,
+                        onPressed: (v.status == "rejected") ? () => _deleteVolunteer(v) : null,
                       ),
                     ],
                   ),

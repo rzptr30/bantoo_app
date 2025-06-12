@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../models/volunteer_campaign.dart';
 import '../db/volunteer_campaign_database.dart';
+import '../db/notification_database.dart';
+import '../models/notification_item.dart';
 
 class EditVolunteerCampaignScreen extends StatefulWidget {
   final VolunteerCampaign campaign;
@@ -115,15 +117,26 @@ class _EditVolunteerCampaignScreenState extends State<EditVolunteerCampaignScree
       // fee: _biayaController.text,
       eventDate: _selectedDate!,
       imagePath: _selectedImage!.path,
-      status: "pending",         // <-- Set status ke pending
-      adminFeedback: null,       // <-- Hapus feedback admin
+      status: "pending",      // PATCH: status jadi pending!
+      adminFeedback: "",      // PATCH: feedback kosong
     );
 
     await VolunteerCampaignDatabase.instance.update(updated);
 
+    // PATCH: kirim notifikasi ke admin
+    await NotificationDatabase.instance.insertNotification(
+      NotificationItem(
+        user: 'admin',
+        message: 'Campaign volunteer revisi diajukan: "${updated.title}" oleh ${updated.creator}',
+        date: DateTime.now(),
+        type: 'campaign_pending',
+        relatedId: updated.id?.toString(),
+      ),
+    );
+
     setState(() => _isSubmitting = false);
     ScaffoldMessenger.of(this.context).showSnackBar(
-      SnackBar(content: Text('Campaign volunteer berhasil diupdate!')),
+      SnackBar(content: Text('Campaign volunteer berhasil diajukan ulang! Menunggu ACC Admin.')),
     );
     Navigator.pop(this.context, true);
   }

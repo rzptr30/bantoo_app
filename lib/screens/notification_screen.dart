@@ -5,6 +5,12 @@ import 'campaign_detail_screen.dart';
 import 'volunteer_list_screen.dart';
 import '../db/campaign_database.dart';
 import '../models/campaign.dart';
+import '../db/volunteer_campaign_database.dart';
+import '../models/volunteer_campaign.dart';
+import 'admin_campaign_approval_screen.dart';
+// Tambahkan import berikut:
+import 'my_campaign_detail_screen.dart';
+import 'my_volunteer_campaign_detail_screen.dart';
 
 class NotificationScreen extends StatelessWidget {
   final String username;
@@ -45,6 +51,43 @@ class NotificationScreen extends StatelessWidget {
           ),
         );
       }
+    } else if (notif.type == 'campaign_pending') {
+      // Langsung buka halaman approval admin tanpa parameter
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AdminCampaignApprovalScreen(),
+        ),
+      );
+    } else if (notif.type == 'campaign_approved' || notif.type == 'campaign_rejected') {
+      // Cek donasi atau volunteer, lalu buka detail campaign user
+      final campaignId = int.tryParse(notif.relatedId ?? '');
+      if (campaignId != null) {
+        // Cek donasi dulu
+        final campaign = await CampaignDatabase.instance.getCampaignById(campaignId);
+        if (campaign != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MyCampaignDetailScreen(campaign: campaign),
+            ),
+          );
+          return;
+        }
+        // Jika volunteer
+        final vCampaign = await VolunteerCampaignDatabase.instance.getCampaignById(campaignId);
+        if (vCampaign != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MyVolunteerCampaignDetailScreen(campaign: vCampaign),
+            ),
+          );
+          return;
+        }
+      }
+      // Fallback: buka halaman "Campaign Saya"
+      Navigator.pushNamed(context, '/my_campaigns');
     }
     // Untuk type lain, bisa tambahkan navigasi lain
   }
@@ -70,6 +113,12 @@ class NotificationScreen extends StatelessWidget {
               icon = Icons.attach_money;
             } else if (n.type == 'volunteer_new') {
               icon = Icons.people;
+            } else if (n.type == 'campaign_pending') {
+              icon = Icons.pending;
+            } else if (n.type == 'campaign_approved') {
+              icon = Icons.check_circle;
+            } else if (n.type == 'campaign_rejected') {
+              icon = Icons.cancel;
             } else {
               icon = Icons.notifications;
             }
