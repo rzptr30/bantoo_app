@@ -296,9 +296,9 @@ class __DashboardHomeState extends State<_DashboardHome> {
             ),
           ),
           SizedBox(height: 16),
-          if (widget.role == "admin") _pendingCampaignSection(context),
-          EmergencyBantooSection(key: widget.emergencyKey, role: widget.role, username: widget.username),
-          SizedBox(height: 16),
+          // if (widget.role == "admin") _pendingCampaignSection(context),
+          // EmergencyBantooSection(key: widget.emergencyKey, role: widget.role, username: widget.username),
+          // SizedBox(height: 16),
 
           // EMERGENCY BANTOO SECTION (donasi approved)
           // Padding(

@@ -9,6 +9,11 @@ import 'my_campaigns_screen.dart';
 import 'admin_campaign_approval_screen.dart';
 // Tambahkan import berikut:
 import 'my_volunteer_history_screen.dart';
+import '../db/volunteer_campaign_database.dart';
+import '../db/volunteer_registration_database.dart';
+import '../db/volunteer_notification_database.dart';
+import '../db/notification_database.dart';
+import '../db/volunteer_applicant_database.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -115,9 +120,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
           if (confirm == true) {
             await CampaignDatabase.instance.deleteAllCampaignRelated();
+            await VolunteerCampaignDatabase.instance.deleteAllCampaigns();
+            await VolunteerRegistrationDatabase.instance.deleteAllRegistrations();
+            await VolunteerNotificationDatabase.instance.deleteAllNotifications();
+            await NotificationDatabase.instance.deleteAllNotifications();
+            await VolunteerApplicantDatabase.instance.deleteAllApplicants();
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Semua data campaign, donasi, doa berhasil dihapus!\nData user tetap aman.')),
+                SnackBar(content: Text('Semua data campaign berhasil dihapus!\nData user tetap aman.')),
               );
             }
           }

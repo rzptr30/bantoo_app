@@ -106,4 +106,8 @@ class VolunteerApplicantDatabase {
     final db = await instance.database;
     db.close();
   }
+  Future<void> deleteAllApplicants() async {
+  final db = await instance.database;
+  await db.delete('volunteer_applicants');
+}
 }

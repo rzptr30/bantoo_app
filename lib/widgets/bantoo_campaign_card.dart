@@ -83,7 +83,7 @@ class BantooCampaignCard extends StatelessWidget {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 30,
-                                fontWeight: FontWeight.w800,
+                                fontWeight:  FontWeight.w800,
                                 letterSpacing: 1,
                                 height: 1.1,
                                 shadows: [

@@ -218,16 +218,18 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        tooltip: "Edit",
-                        onPressed: (c.status == "rejected") ? () => _editDonasi(c) : null,
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        tooltip: "Hapus",
-                        onPressed: (c.status == "rejected") ? () => _deleteDonasi(c) : null,
-                      ),
+                      if (c.status == "rejected")
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          tooltip: "Edit",
+                          onPressed: () => _editDonasi(c),
+                        ),
+                      if (c.status == "rejected")
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          tooltip: "Hapus",
+                          onPressed: () => _deleteDonasi(c),
+                        ),
                     ],
                   ),
                 ],
@@ -256,7 +258,7 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
               MaterialPageRoute(
                 builder: (_) => MyVolunteerCampaignDetailScreen(
                   campaign: v,
-                  currentUsername: widget.creator, // <-- Tambahkan ini agar tidak error!
+                  currentUsername: widget.creator,
                 ),
               ),
             );
@@ -324,16 +326,18 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        tooltip: "Edit",
-                        onPressed: (v.status == "rejected") ? () => _editVolunteer(v) : null,
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        tooltip: "Hapus",
-                        onPressed: (v.status == "rejected") ? () => _deleteVolunteer(v) : null,
-                      ),
+                      if (v.status == "rejected")
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          tooltip: "Edit",
+                          onPressed: () => _editVolunteer(v),
+                        ),
+                      if (v.status == "rejected")
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          tooltip: "Hapus",
+                          onPressed: () => _deleteVolunteer(v),
+                        ),
                     ],
                   ),
                 ],

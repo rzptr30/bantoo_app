@@ -75,4 +75,8 @@ class VolunteerNotificationDatabase {
       whereArgs: [id],
     );
   }
+  Future<void> deleteAllNotifications() async {
+  final db = await instance.database;
+  await db.delete('volunteer_notifications');
+}
 }
