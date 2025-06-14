@@ -8,7 +8,7 @@ import '../models/doa.dart';
 import '../db/campaign_database.dart';
 import '../db/notification_database.dart';
 import '../models/notification_item.dart';
-import '../db/campaign_database.dart';
+
 
 class CampaignDetailScreen extends StatefulWidget {
   final Campaign campaign;
@@ -207,6 +207,14 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     );
                     await CampaignDatabase.instance.insertDoa(doa);
                   }
+                  // Notifikasi untuk donor (user yang login)
+await NotificationDatabase.instance.insertNotification(NotificationItem(
+  user: username, // username login, sudah diambil dari SharedPreferences
+  message: 'Donasi Anda pada campaign "${widget.campaign.title}" berhasil.',
+  date: DateTime.now(),
+  type: 'donation_new',
+  relatedId: widget.campaign.id!.toString(),
+));
 
                   // === UPDATE: Notifikasi ke creator campaign ===
                   final campaignData = await CampaignDatabase.instance.getCampaignById(widget.campaign.id!);

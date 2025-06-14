@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'user_info_screen.dart';
 import 'archive_campaign_screen.dart';
-import 'transaction_history_screen.dart';
+  import 'transaction_history_screen.dart';
 import '../db/campaign_database.dart';
 import 'login_screen.dart';
 import 'my_campaigns_screen.dart';

@@ -45,11 +45,11 @@ class _VolunteerApplicantListScreenState extends State<VolunteerApplicantListScr
   String _statusLabel(String status) {
     switch (status) {
       case 'approved':
-        return "Approved";
+        return "Disetujui";
       case 'rejected':
-        return "Rejected";
+        return "Ditolak";
       default:
-        return "Pending";
+        return "Menunggu";
     }
   }
 

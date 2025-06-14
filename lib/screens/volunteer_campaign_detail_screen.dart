@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/volunteer_campaign.dart';
 import '../models/volunteer_applicant.dart';
 import '../db/volunteer_applicant_database.dart';
-// Tambahkan import jika ada notifikasi
-// import '../utils/notification_helper.dart'; // (pseudocode, sesuaikan dengan projectmu)
 import 'package:intl/intl.dart';
 
 class VolunteerCampaignDetailScreen extends StatefulWidget {
@@ -52,17 +50,6 @@ class _VolunteerCampaignDetailScreenState extends State<VolunteerCampaignDetailS
         status: 'pending',
       );
       await VolunteerApplicantDatabase.instance.insertApplicant(applicant);
-
-      // (Pseudocode) Kirim notifikasi ke creator campaign volunteer
-      // await NotificationHelper.sendNotification(
-      //   to: widget.campaign.creator, // pastikan campaign.creator adalah user ID/username
-      //   title: "Pendaftar Baru Volunteer",
-      //   message: "$currentUserName mendaftar ke campaign ${widget.campaign.title}",
-      //   payload: {
-      //     "type": "volunteer_applicant",
-      //     "campaignId": widget.campaign.id!,
-      //   },
-      // );
 
       if (mounted) {
         setState(() {
@@ -115,6 +102,20 @@ class _VolunteerCampaignDetailScreenState extends State<VolunteerCampaignDetailS
             Text("Oprec: $regStartStr - $regEndStr"),
             SizedBox(height: 16),
             Text(campaign.description),
+            if (campaign.terms.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 14.0),
+                child: Text("Terms & Conditions:\n${campaign.terms}",
+                  style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blueGrey[700]),
+                ),
+              ),
+            if (campaign.disclaimer.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6.0),
+                child: Text("Disclaimer:\n${campaign.disclaimer}",
+                  style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blueGrey[700]),
+                ),
+              ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _alreadyJoined || _isJoining ? null : _handleJoin,

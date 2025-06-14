@@ -147,13 +147,20 @@ class _MyCampaignsScreenState extends State<MyCampaignsScreen> with SingleTicker
       itemBuilder: (context, idx) {
         final c = _donasiCampaigns[idx];
         return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MyCampaignDetailScreen(campaign: c),
-              ),
-            );
+          onTap: () async {
+            final latestData = await CampaignDatabase.instance.getCampaignById(c.id!);
+            if (latestData != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MyCampaignDetailScreen(campaign: latestData),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Data campaign tidak ditemukan!")),
+              );
+            }
           },
           child: Card(
             margin: EdgeInsets.only(bottom: 16),

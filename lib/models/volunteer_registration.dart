@@ -1,12 +1,16 @@
 class VolunteerRegistration {
   final int? id;
-  final int campaignId;       // id campaign volunteer
-  final String user;          // username/email pendaftar
-  final String name;          // nama lengkap
-  final String phone;         // nomor HP
-  final String status;        // "pending", "approved", "rejected"
-  final String? adminFeedback;// feedback admin (jika rejected)
-  final DateTime registeredAt;// waktu daftar
+  final int campaignId;
+  final String user;
+  final String name;
+  final String phone;
+  final String email;         // NEW
+  final String gender;        // NEW
+  final int umur;             // NEW
+  final String experience;    // NEW
+  final String status;
+  final String? adminFeedback;
+  final DateTime registeredAt;
 
   VolunteerRegistration({
     this.id,
@@ -14,6 +18,10 @@ class VolunteerRegistration {
     required this.user,
     required this.name,
     required this.phone,
+    required this.email,         // NEW
+    required this.gender,        // NEW
+    required this.umur,          // NEW
+    required this.experience,    // NEW
     required this.status,
     this.adminFeedback,
     required this.registeredAt,
@@ -26,6 +34,10 @@ class VolunteerRegistration {
       'user': user,
       'name': name,
       'phone': phone,
+      'email': email,           // NEW
+      'gender': gender,         // NEW
+      'umur': umur,             // NEW
+      'experience': experience, // NEW
       'status': status,
       'adminFeedback': adminFeedback,
       'registeredAt': registeredAt.toIso8601String(),
@@ -39,6 +51,10 @@ class VolunteerRegistration {
       user: map['user'],
       name: map['name'],
       phone: map['phone'],
+      email: map['email'] ?? '',
+      gender: map['gender'] ?? '',
+      umur: map['umur'] ?? 0,
+      experience: map['experience'] ?? '',
       status: map['status'],
       adminFeedback: map['adminFeedback'],
       registeredAt: DateTime.parse(map['registeredAt']),

@@ -8,10 +8,9 @@ import '../models/campaign.dart';
 import '../db/volunteer_campaign_database.dart';
 import '../models/volunteer_campaign.dart';
 import 'admin_campaign_approval_screen.dart';
-// Tambahkan import berikut:
 import 'my_campaign_detail_screen.dart';
 import 'my_volunteer_campaign_detail_screen.dart';
-import 'volunteer_applicant_list_screen.dart'; // <--- Tambahkan ini
+import 'volunteer_applicant_list_screen.dart';
 
 class NotificationScreen extends StatelessWidget {
   final String username;
@@ -45,7 +44,7 @@ class NotificationScreen extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => VolunteerApplicantListScreen(
                 campaignId: vCampaign.id!,
-                campaignTitle: vCampaign.title,
+                campaignTitle: vCampaign.title ?? '', // FIX: pastikan String, bukan String?
               ),
             ),
           );
@@ -82,7 +81,7 @@ class NotificationScreen extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => MyVolunteerCampaignDetailScreen(
                 campaign: vCampaign,
-                currentUsername: username, // <--- Tambahkan jika perlu
+                currentUsername: username,
               ),
             ),
           );
@@ -94,38 +93,68 @@ class NotificationScreen extends StatelessWidget {
     // Untuk type lain, bisa tambahkan navigasi lain
   }
 
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'donation_new':
+        return Icons.attach_money;
+      case 'volunteer_new':
+        return Icons.people;
+      case 'volunteer_approved':
+        return Icons.check_circle;
+      case 'volunteer_rejected':
+        return Icons.cancel;
+      case 'campaign_pending':
+        return Icons.pending;
+      case 'campaign_approved':
+        return Icons.check_circle;
+      case 'campaign_rejected':
+        return Icons.cancel;
+      default:
+        return Icons.notifications;
+    }
+  }
+
+  Color? _iconColorForType(String type) {
+    switch (type) {
+      case 'volunteer_approved':
+      case 'campaign_approved':
+        return Colors.green;
+      case 'volunteer_rejected':
+      case 'campaign_rejected':
+        return Colors.red;
+      case 'campaign_pending':
+        return Colors.orange;
+      case 'donation_new':
+        return Colors.blue;
+      case 'volunteer_new':
+        return Colors.blueGrey;
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<NotificationItem>>(
       future: NotificationDatabase.instance.getNotificationsForUser(username),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text("Belum ada notifikasi."));
+          return const Center(child: Text("Belum ada notifikasi."));
         }
         final notifs = snapshot.data!;
-        return ListView.builder(
+        return ListView.separated(
           itemCount: notifs.length,
+          separatorBuilder: (context, index) => Divider(height: 1),
           itemBuilder: (context, i) {
             final n = notifs[i];
-            IconData icon;
-            if (n.type == 'donation_new') {
-              icon = Icons.attach_money;
-            } else if (n.type == 'volunteer_new') {
-              icon = Icons.people;
-            } else if (n.type == 'campaign_pending') {
-              icon = Icons.pending;
-            } else if (n.type == 'campaign_approved') {
-              icon = Icons.check_circle;
-            } else if (n.type == 'campaign_rejected') {
-              icon = Icons.cancel;
-            } else {
-              icon = Icons.notifications;
-            }
             return ListTile(
-              leading: Icon(icon),
+              leading: Icon(
+                _iconForType(n.type ?? ''),
+                color: _iconColorForType(n.type ?? ''),
+              ),
               title: Text(n.message),
               subtitle: Text('${n.date.day.toString().padLeft(2, '0')}/'
                   '${n.date.month.toString().padLeft(2, '0')}/'

@@ -84,6 +84,13 @@ class _MyVolunteerHistoryScreenState extends State<MyVolunteerHistoryScreen> {
                             style: TextStyle(color: Colors.red[700], fontStyle: FontStyle.italic, fontSize: 13),
                           ),
                         ),
+                      const SizedBox(height: 6),
+                      Text('No HP: ${reg.phone}'),
+                      Text('Email: ${reg.email}'),
+                      Text('Gender: ${reg.gender}'),
+                      Text('Umur: ${reg.umur}'),
+                      if (reg.experience.isNotEmpty)
+                        Text('Pengalaman: ${reg.experience}'),
                     ],
                   ),
                   // Tambahan: klik menuju detail volunteer campaign

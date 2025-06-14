@@ -20,8 +20,9 @@ class VolunteerRegistrationDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -33,6 +34,10 @@ class VolunteerRegistrationDatabase {
         user TEXT NOT NULL,
         name TEXT NOT NULL,
         phone TEXT NOT NULL,
+        email TEXT,
+        gender TEXT,
+        umur INTEGER,
+        experience TEXT,
         status TEXT NOT NULL,
         adminFeedback TEXT,
         registeredAt TEXT NOT NULL
@@ -40,68 +45,57 @@ class VolunteerRegistrationDatabase {
     ''');
   }
 
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      try {
+        await db.execute('ALTER TABLE volunteer_registrations ADD COLUMN email TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE volunteer_registrations ADD COLUMN gender TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE volunteer_registrations ADD COLUMN umur INTEGER;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE volunteer_registrations ADD COLUMN experience TEXT;');
+      } catch (_) {}
+    }
+  }
+
   Future<int> insertRegistration(VolunteerRegistration reg) async {
     final db = await instance.database;
     return await db.insert('volunteer_registrations', reg.toMap());
   }
 
+  Future<List<VolunteerRegistration>> getRegistrationsByUser(String username) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'volunteer_registrations',
+      where: 'user = ?',
+      whereArgs: [username],
+      orderBy: 'registeredAt DESC',
+    );
+    return result.map((map) => VolunteerRegistration.fromMap(map)).toList();
+  }
+
   Future<List<VolunteerRegistration>> getRegistrationsByCampaign(int campaignId) async {
     final db = await instance.database;
-    final res = await db.query(
+    final result = await db.query(
       'volunteer_registrations',
       where: 'campaignId = ?',
       whereArgs: [campaignId],
       orderBy: 'registeredAt DESC',
     );
-    return res.map((m) => VolunteerRegistration.fromMap(m)).toList();
+    return result.map((map) => VolunteerRegistration.fromMap(map)).toList();
   }
-
-  Future<List<VolunteerRegistration>> getRegistrationsByUser(String user) async {
-    final db = await instance.database;
-    final res = await db.query(
-      'volunteer_registrations',
-      where: 'user = ?',
-      whereArgs: [user],
-      orderBy: 'registeredAt DESC',
-    );
-    return res.map((m) => VolunteerRegistration.fromMap(m)).toList();
-  }
-
-  Future<List<VolunteerRegistration>> getPendingRegistrations() async {
-    final db = await instance.database;
-    final res = await db.query(
-      'volunteer_registrations',
-      where: 'status = ?',
-      whereArgs: ['pending'],
-      orderBy: 'registeredAt DESC',
-    );
-    return res.map((m) => VolunteerRegistration.fromMap(m)).toList();
-  }
-
-  Future<int> updateRegistrationStatus(int id, String status, {String? adminFeedback}) async {
-    final db = await instance.database;
-    return await db.update(
-      'volunteer_registrations',
-      {
-        'status': status,
-        'adminFeedback': adminFeedback,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<int> deleteRegistration(int id) async {
-    final db = await instance.database;
-    return await db.delete(
-      'volunteer_registrations',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<void> deleteAllRegistrations() async {
+    Future<void> deleteAllRegistrations() async {
     final db = await instance.database;
     await db.delete('volunteer_registrations');
+  }
+
+  Future close() async {
+    final db = await instance.database;
+    db.close();
+    
   }
 }

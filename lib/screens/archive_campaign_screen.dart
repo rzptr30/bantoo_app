@@ -4,6 +4,7 @@ import '../db/campaign_database.dart';
 import '../db/volunteer_campaign_database.dart';
 import '../models/campaign.dart';
 import '../models/volunteer_campaign.dart';
+import 'my_volunteer_campaign_detail_screen.dart'; // Pastikan import ini ada
 
 class ArchiveCampaignScreen extends StatefulWidget {
   const ArchiveCampaignScreen({Key? key}) : super(key: key);
@@ -148,6 +149,17 @@ class _ArchiveCampaignScreenState extends State<ArchiveCampaignScreen> with Sing
                       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MyVolunteerCampaignDetailScreen(
+                                campaign: c,
+                                currentUsername: '', // admin POV
+                              ),
+                            ),
+                          );
+                        },
                         leading: c.imagePath.isNotEmpty && File(c.imagePath).existsSync()
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
