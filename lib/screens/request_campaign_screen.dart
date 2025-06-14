@@ -24,7 +24,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   final _descController = TextEditingController();
   final _lokasiController = TextEditingController();
   final _kuotaController = TextEditingController();
-  final _biayaController = TextEditingController();
+  // final _biayaController = TextEditingController(); // DIHAPUS
   final _termsController = TextEditingController();
   final _disclaimerController = TextEditingController();
   DateTime? _selectedDate;
@@ -32,6 +32,8 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   DateTime? _registrationStart;
   DateTime? _registrationEnd;
   bool _isSubmitting = false;
+
+  String? _dateValidationError;
 
   Future<void> _pickAndCropImage() async {
     try {
@@ -83,6 +85,12 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
+        if (_registrationStart != null && _registrationStart!.isAfter(_selectedDate!)) {
+          _registrationStart = null;
+        }
+        if (_registrationEnd != null && _registrationEnd!.isAfter(_selectedDate!)) {
+          _registrationEnd = null;
+        }
       });
     }
   }
@@ -93,12 +101,11 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       context: this.context,
       initialDate: now,
       firstDate: now,
-      lastDate: now.add(Duration(days: 365)),
+      lastDate: _selectedDate ?? now.add(Duration(days: 365)),
     );
     if (picked != null) {
       setState(() {
         _registrationStart = picked;
-        // Reset registrationEnd if not valid anymore
         if (_registrationEnd != null && _registrationEnd!.isBefore(_registrationStart!)) {
           _registrationEnd = null;
         }
@@ -112,7 +119,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       context: this.context,
       initialDate: now,
       firstDate: now,
-      lastDate: now.add(Duration(days: 365)),
+      lastDate: _selectedDate ?? now.add(Duration(days: 365)),
     );
     if (picked != null) {
       setState(() {
@@ -121,12 +128,33 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
     }
   }
 
+  bool _validateDates() {
+    if (_selectedDate == null || _registrationStart == null || _registrationEnd == null) {
+      _dateValidationError = 'Tanggal event, oprec mulai, dan oprec selesai wajib diisi!';
+      return false;
+    }
+    if (_registrationStart!.isAfter(_selectedDate!)) {
+      _dateValidationError = 'Tanggal oprec mulai tidak boleh setelah tanggal event!';
+      return false;
+    }
+    if (_registrationEnd!.isAfter(_selectedDate!)) {
+      _dateValidationError = 'Tanggal oprec selesai tidak boleh setelah tanggal event!';
+      return false;
+    }
+    if (_registrationStart!.isAfter(_registrationEnd!)) {
+      _dateValidationError = 'Tanggal oprec selesai harus setelah tanggal mulai!';
+      return false;
+    }
+    _dateValidationError = null;
+    return true;
+  }
+
   void _submit() async {
     if (_judulController.text.isEmpty ||
         _descController.text.isEmpty ||
         _lokasiController.text.isEmpty ||
         _kuotaController.text.isEmpty ||
-        _biayaController.text.isEmpty ||
+        // _biayaController.text.isEmpty || // DIHAPUS
         _selectedDate == null ||
         _selectedImage == null ||
         _registrationStart == null ||
@@ -138,12 +166,14 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       );
       return;
     }
-    if (_registrationStart!.isAfter(_registrationEnd!)) {
+    if (!_validateDates()) {
+      setState(() {});
       ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(content: Text('Tanggal oprec selesai harus setelah tanggal mulai!')),
+        SnackBar(content: Text(_dateValidationError!)),
       );
       return;
     }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -152,7 +182,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         description: _descController.text,
         location: _lokasiController.text,
         quota: _kuotaController.text,
-        fee: _biayaController.text,
+        fee: "Gratis", // Otomatis set ke Gratis
         eventDate: _selectedDate!,
         imagePath: _selectedImage!.path,
         creator: widget.creator,
@@ -164,10 +194,8 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         disclaimer: _disclaimerController.text,
       );
 
-      // Simpan dan dapatkan id campaign baru
       final int campaignId = await VolunteerCampaignDatabase.instance.insert(campaign);
 
-      // === Tambahkan notifikasi ke admin ===
       await NotificationDatabase.instance.insertNotification(
         NotificationItem(
           user: 'admin',
@@ -223,7 +251,6 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar Campaign
             Text("Gambar Campaign", style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 12),
             Center(child: _buildImagePreview()),
@@ -239,20 +266,17 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
               ),
             ),
             SizedBox(height: 24),
-            // Judul Campaign
             TextField(
               controller: _judulController,
               decoration: InputDecoration(labelText: "Judul Campaign"),
             ),
             SizedBox(height: 16),
-            // Deskripsi
             TextField(
               controller: _descController,
               decoration: InputDecoration(labelText: "Deskripsi"),
               maxLines: 5,
             ),
             SizedBox(height: 16),
-            // Tanggal Event
             Row(
               children: [
                 Text("Tanggal Event", style: TextStyle(fontSize: 16)),
@@ -269,13 +293,12 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
               ],
             ),
             SizedBox(height: 16),
-            // Oprec Start
             Row(
               children: [
                 Text("Oprec Mulai", style: TextStyle(fontSize: 16)),
                 Spacer(),
                 TextButton(
-                  onPressed: _selectRegistrationStart,
+                  onPressed: _selectedDate == null ? null : _selectRegistrationStart,
                   child: Text(
                     _registrationStart == null
                         ? "Pilih Tanggal"
@@ -286,13 +309,12 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
               ],
             ),
             SizedBox(height: 12),
-            // Oprec End
             Row(
               children: [
                 Text("Oprec Selesai", style: TextStyle(fontSize: 16)),
                 Spacer(),
                 TextButton(
-                  onPressed: _registrationStart == null ? null : _selectRegistrationEnd,
+                  onPressed: (_selectedDate == null || _registrationStart == null) ? null : _selectRegistrationEnd,
                   child: Text(
                     _registrationEnd == null
                         ? "Pilih Tanggal"
@@ -302,27 +324,26 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
                 ),
               ],
             ),
+            if (_dateValidationError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                child: Text(
+                  _dateValidationError!,
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
             SizedBox(height: 16),
-            // Lokasi
             TextField(
               controller: _lokasiController,
               decoration: InputDecoration(labelText: "Lokasi"),
             ),
             SizedBox(height: 16),
-            // Kuota
             TextField(
               controller: _kuotaController,
               decoration: InputDecoration(labelText: "Kuota Peserta"),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 16),
-            // Biaya
-            TextField(
-              controller: _biayaController,
-              decoration: InputDecoration(labelText: "Biaya (cth: Gratis)"),
-            ),
             SizedBox(height: 24),
-            // Terms & Disclaimer
             Text("Terms & Conditions", style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 6),
             TextField(

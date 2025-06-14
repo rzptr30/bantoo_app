@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/user_database.dart';
 import 'dashboard_screen.dart';
 import 'register_screen.dart';
+import '../services/notification_service.dart'; // Pastikan path import sesuai
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -53,6 +54,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString('role', role);
       await prefs.setString('username', username);
       await prefs.setString('email', email);
+
+      // Inisialisasi notification service supaya push notification aktif
+      await NotificationService.init(context, username!);
 
       Navigator.pushReplacement(
         context,
