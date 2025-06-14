@@ -196,6 +196,18 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
 
       final int campaignId = await VolunteerCampaignDatabase.instance.insert(campaign);
 
+      // === Tambahkan notifikasi ke creator sendiri (revisi nomor 5) ===
+      await NotificationDatabase.instance.insertNotification(
+        NotificationItem(
+          user: widget.creator,
+          message: 'Campaign volunteer "${campaign.title}" telah diajukan dan menunggu review admin.',
+          date: DateTime.now(),
+          type: 'campaign_pending',
+          relatedId: campaignId.toString(),
+        ),
+      );
+
+      // Notifikasi ke admin tetap ada
       await NotificationDatabase.instance.insertNotification(
         NotificationItem(
           user: 'admin',

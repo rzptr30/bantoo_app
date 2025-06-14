@@ -143,84 +143,87 @@ class EmergencyBantooSectionState extends State<EmergencyBantooSection> {
                               left: i == 0 ? 16 : 8, right: 8, bottom: 8),
                           child: Stack(
                             children: [
-                              Card(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18)),
-                                elevation: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: c.imagePath.isNotEmpty &&
-                                                File(c.imagePath).existsSync()
-                                            ? Image.file(
-                                                File(c.imagePath),
-                                                width: double.infinity,
-                                                height: 80,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Container(
-                                                width: double.infinity,
-                                                height: 80,
-                                                color: Colors.grey[300],
-                                                child: Icon(Icons.image, size: 40),
-                                              ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        c.creator,
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                      Text(
-                                        c.title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-                                      ),
-                                      SizedBox(height: 5),
-                                      Text(
-                                        "Tersedia",
-                                        style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-                                      Text(
-                                        "Rp${formatRupiah(totalTerkumpul)}",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                            color: Colors.blue[800]),
-                                      ),
-                                      SizedBox(height: 8),
-                                      LinearProgressIndicator(
-                                        value: percent,
-                                        backgroundColor: Colors.grey[300],
-                                        color: Colors.blue,
-                                        minHeight: 4,
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        "${(percent * 100).toStringAsFixed(1)}%",
-                                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                                      ),
-                                      SizedBox(height: 3),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "Target: Rp${formatRupiah(c.targetFund)}",
-                                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                          ),
-                                          Text(
-                                            expired != null
-                                                ? "Sampai: ${expired.day.toString().padLeft(2, '0')}/${expired.month.toString().padLeft(2, '0')}/${expired.year}"
-                                                : "-",
-                                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                              SizedBox(
+                                height: 230, // <-- Tambahkan tinggi tetap agar tidak overflow
+                                child: Card(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18)),
+                                  elevation: 2,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max, // <-- Pastikan max agar isi memenuhi tinggi parent
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: c.imagePath.isNotEmpty &&
+                                                  File(c.imagePath).existsSync()
+                                              ? Image.file(
+                                                  File(c.imagePath),
+                                                  width: double.infinity,
+                                                  height: 80,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Container(
+                                                  width: double.infinity,
+                                                  height: 80,
+                                                  color: Colors.grey[300],
+                                                  child: Icon(Icons.image, size: 40),
+                                                ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          c.creator,
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                        Text(
+                                          c.title,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                                        ),
+                                        SizedBox(height: 5),
+                                        Text(
+                                          "Tersedia",
+                                          style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                                        Text(
+                                          "Rp${formatRupiah(totalTerkumpul)}",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: Colors.blue[800]),
+                                        ),
+                                        SizedBox(height: 8),
+                                        LinearProgressIndicator(
+                                          value: percent,
+                                          backgroundColor: Colors.grey[300],
+                                          color: Colors.blue,
+                                          minHeight: 4,
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          "${(percent * 100).toStringAsFixed(1)}%",
+                                          style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                                        ),
+                                        SizedBox(height: 3),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "Target: Rp${formatRupiah(c.targetFund)}",
+                                              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                            ),
+                                            Text(
+                                              expired != null
+                                                  ? "Sampai: ${expired.day.toString().padLeft(2, '0')}/${expired.month.toString().padLeft(2, '0')}/${expired.year}"
+                                                  : "-",
+                                              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

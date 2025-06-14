@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../db/notification_database.dart';
 import '../models/notification_item.dart';
@@ -12,11 +13,49 @@ import 'my_campaign_detail_screen.dart';
 import 'my_volunteer_campaign_detail_screen.dart';
 import 'volunteer_applicant_list_screen.dart';
 
-class NotificationScreen extends StatelessWidget {
+class NotificationScreen extends StatefulWidget {
   final String username;
   const NotificationScreen({Key? key, required this.username}) : super(key: key);
 
+  @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  List<NotificationItem> _notifs = [];
+  bool _loading = true;
+  Timer? _notifTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotifications();
+
+    // Polling setiap 5 detik agar real-time
+    _notifTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      _fetchNotifications();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchNotifications() async {
+    setState(() {
+      _loading = true;
+    });
+    final notifs = await NotificationDatabase.instance.getNotificationsForUser(widget.username);
+    setState(() {
+      _notifs = notifs;
+      _loading = false;
+    });
+  }
+
   Future<void> _onNotifTap(BuildContext context, NotificationItem notif) async {
+    // ... (isi sama seperti sebelumnya, tidak perlu diubah)
     if (notif.type == 'donation_new' || notif.type == 'volunteer_approved') {
       final campaignId = int.tryParse(notif.relatedId ?? '');
       if (campaignId != null) {
@@ -44,7 +83,7 @@ class NotificationScreen extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => VolunteerApplicantListScreen(
                 campaignId: vCampaign.id!,
-                campaignTitle: vCampaign.title ?? '', // FIX: pastikan String, bukan String?
+                campaignTitle: vCampaign.title ?? '',
               ),
             ),
           );
@@ -81,7 +120,7 @@ class NotificationScreen extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => MyVolunteerCampaignDetailScreen(
                 campaign: vCampaign,
-                currentUsername: username,
+                currentUsername: widget.username,
               ),
             ),
           );
@@ -135,36 +174,33 @@ class NotificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<NotificationItem>>(
-      future: NotificationDatabase.instance.getNotificationsForUser(username),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("Belum ada notifikasi."));
-        }
-        final notifs = snapshot.data!;
-        return ListView.separated(
-          itemCount: notifs.length,
-          separatorBuilder: (context, index) => Divider(height: 1),
-          itemBuilder: (context, i) {
-            final n = notifs[i];
-            return ListTile(
-              leading: Icon(
-                _iconForType(n.type ?? ''),
-                color: _iconColorForType(n.type ?? ''),
-              ),
-              title: Text(n.message),
-              subtitle: Text('${n.date.day.toString().padLeft(2, '0')}/'
-                  '${n.date.month.toString().padLeft(2, '0')}/'
-                  '${n.date.year} ${n.date.hour.toString().padLeft(2, '0')}:'
-                  '${n.date.minute.toString().padLeft(2, '0')}'),
-              onTap: () => _onNotifTap(context, n),
-            );
-          },
-        );
-      },
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_notifs.isEmpty) {
+      return const Center(child: Text("Belum ada notifikasi."));
+    }
+    return RefreshIndicator(
+      onRefresh: _fetchNotifications,
+      child: ListView.separated(
+        itemCount: _notifs.length,
+        separatorBuilder: (context, index) => Divider(height: 1),
+        itemBuilder: (context, i) {
+          final n = _notifs[i];
+          return ListTile(
+            leading: Icon(
+              _iconForType(n.type ?? ''),
+              color: _iconColorForType(n.type ?? ''),
+            ),
+            title: Text(n.message),
+            subtitle: Text('${n.date.day.toString().padLeft(2, '0')}/'
+                '${n.date.month.toString().padLeft(2, '0')}/'
+                '${n.date.year} ${n.date.hour.toString().padLeft(2, '0')}:'
+                '${n.date.minute.toString().padLeft(2, '0')}'),
+            onTap: () => _onNotifTap(context, n),
+          );
+        },
+      ),
     );
   }
 }
