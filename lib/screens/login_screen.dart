@@ -56,8 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString('email', email);
 
       // Inisialisasi notification service supaya push notification aktif
-      await NotificationService.init(context, username!);
-
+    
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
