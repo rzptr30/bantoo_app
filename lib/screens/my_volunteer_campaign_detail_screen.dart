@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/volunteer_campaign.dart';
-import 'volunteer_applicant_list_screen.dart'; // <- pastikan sudah import
+import 'volunteer_applicant_list_screen.dart';
 
 class MyVolunteerCampaignDetailScreen extends StatelessWidget {
   final VolunteerCampaign campaign;
@@ -18,7 +18,9 @@ class MyVolunteerCampaignDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isCreator = campaign.creator == currentUsername; // <-- ganti di sini
+    // Creator atau admin bisa melihat daftar pendaftar!
+    final bool isCreatorOrAdmin =
+        campaign.creator == currentUsername || currentUsername == 'admin';
 
     return Scaffold(
       appBar: AppBar(
@@ -98,8 +100,8 @@ class MyVolunteerCampaignDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            // ==== TOMBOL LIHAT PENDAFTAR (hanya untuk creator) ====
-            if (isCreator) ...[
+            // ==== TOMBOL LIHAT PENDAFTAR (untuk creator & admin) ====
+            if (isCreatorOrAdmin) ...[
               SizedBox(height: 24),
               Center(
                 child: ElevatedButton.icon(

@@ -14,8 +14,7 @@ import '../models/volunteer_campaign.dart';
 import '../db/volunteer_campaign_database.dart';
 import 'campaign_detail_screen.dart';
 import 'volunteer_campaign_detail_screen.dart';
-import 'volunteer_screen.dart';
-// Tambahkan import berikut:
+// import 'volunteer_screen.dart'; // Sudah tidak dipakai di nav bar
 import '../services/reminder_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -33,13 +32,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<Map<String, dynamic>> _navItems = [
     {"icon": Icons.home, "label": "Home"},
-    {"icon": Icons.favorite, "label": "Volunteer"},
     {"icon": Icons.notifications, "label": "Notification"},
     {"icon": Icons.person, "label": "Profile"},
   ];
 
   String get _appBarTitle {
-    if (_selectedIndex == 3) return "Profile";
+    if (_selectedIndex == 2) return "Profile";
     return _selectedIndex == 0 ? "Dashboard" : _navItems[_selectedIndex]['label'];
   }
 
@@ -105,7 +103,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
-          if (_selectedIndex != 3)
+          if (_selectedIndex != 2)
             Padding(
               padding: const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
               child: CircleAvatar(
@@ -126,16 +124,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     role: widget.role,
                     showCampaignSelectionDialog: _showCampaignSelectionDialog,
                   )
-                : _selectedIndex == 2
+                : _selectedIndex == 1
                     ? NotificationScreen(username: widget.username)
-                    : _selectedIndex == 3
-                        ? ProfileScreen(
-                            username: widget.username,
-                            email: '',
-                            role: widget.role,
-                            avatarAsset: "assets/images/default_avatar.png",
-                          )
-                        : VolunteerScreen(),
+                    : ProfileScreen(
+                        username: widget.username,
+                        email: '',
+                        role: widget.role,
+                        avatarAsset: "assets/images/default_avatar.png",
+                      ),
           ),
         ],
       ),
@@ -306,29 +302,13 @@ class __DashboardHomeState extends State<_DashboardHome> {
           // SizedBox(height: 16),
 
           // EMERGENCY BANTOO SECTION (donasi approved)
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          //   child: Row(
-          //     children: [
-          //       Text("Emergency Bantoo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          //       Spacer(),
-          //       TextButton(
-          //         onPressed: () {
-          //           Navigator.push(
-          //             context,
-          //             MaterialPageRoute(
-          //               builder: (_) => EmergencyBantooSection(
-          //                 role: widget.role,
-          //                 username: widget.username,
-          //               ),
-          //             ),
-          //           );
-          //         },
-          //         child: Text("View all"),
-          //       ),
-          //     ],
-          //   ),
-          // ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Text(
+              "Emergency Bantoo",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+          ),
           FutureBuilder<List<Campaign>>(
             future: _donasiApprovedFuture,
             builder: (context, snapshot) {
@@ -371,22 +351,9 @@ class __DashboardHomeState extends State<_DashboardHome> {
           // THE EVENT IS ABOUT TO EXPIRE SECTION (volunteer approved)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Row(
-              children: [
-                Text("The Event Is About To Expire", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                Spacer(),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => VolunteerScreen(),
-                      ),
-                    );
-                  },
-                  child: Text("View all"),
-                ),
-              ],
+            child: Text(
+              "The Event Is About To Expire",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),
           FutureBuilder<List<VolunteerCampaign>>(

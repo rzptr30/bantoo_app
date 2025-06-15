@@ -43,8 +43,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
   void initState() {
     super.initState();
     _fetchNotifications();
-
-    // Polling setiap 5 detik agar real-time
     _notifTimer = Timer.periodic(Duration(seconds: 5), (timer) {
       _fetchNotifications();
     });
@@ -60,7 +58,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
     setState(() {
       _loading = true;
     });
-    final notifs = await NotificationDatabase.instance.getNotificationsForUser(widget.username);
+
+    // Jika username adalah admin, ambil notifikasi untuk admin saja
+    final notifs = widget.username == 'admin'
+        ? await NotificationDatabase.instance.getNotificationsForUser('admin')
+        : await NotificationDatabase.instance.getNotificationsForUser(widget.username);
+
     setState(() {
       _notifs = notifs;
       _loading = false;
@@ -184,7 +187,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
-  // Helper widget untuk status badge
   Widget _statusBadge(String? status) {
     if (status == null) return SizedBox.shrink();
     String label = status.toUpperCase();
@@ -214,7 +216,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
         separatorBuilder: (context, index) => Divider(height: 1),
         itemBuilder: (context, i) {
           final n = _notifs[i];
-          // Cek notifikasi yang terkait campaign volunteer
           final isVolunteerCampaignNotif = n.type == 'campaign_approved' ||
               n.type == 'campaign_rejected' ||
               n.type == 'volunteer_new';
@@ -263,7 +264,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
               },
             );
           }
-          // Notifikasi lain (default)
           return ListTile(
             leading: Icon(
               _iconForType(n.type ?? ''),

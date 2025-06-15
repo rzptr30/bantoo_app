@@ -25,7 +25,6 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
   final _descController = TextEditingController();
   final _lokasiController = TextEditingController();
   final _kuotaController = TextEditingController();
-  // final _biayaController = TextEditingController(); // DIHAPUS
   final _termsController = TextEditingController();
   final _disclaimerController = TextEditingController();
   DateTime? _selectedDate;
@@ -43,7 +42,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       if (picked != null) {
         final cropped = await ImageCropper().cropImage(
           sourcePath: picked.path,
-          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // 1:1 for volunteer
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
           compressQuality: 90,
           uiSettings: [
             AndroidUiSettings(
@@ -155,7 +154,6 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         _descController.text.isEmpty ||
         _lokasiController.text.isEmpty ||
         _kuotaController.text.isEmpty ||
-        // _biayaController.text.isEmpty || // DIHAPUS
         _selectedDate == null ||
         _selectedImage == null ||
         _registrationStart == null ||
@@ -183,7 +181,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         description: _descController.text,
         location: _lokasiController.text,
         quota: _kuotaController.text,
-        fee: "Gratis", // Otomatis set ke Gratis
+        fee: "Gratis",
         eventDate: _selectedDate!,
         imagePath: _selectedImage!.path,
         creator: widget.creator,
@@ -197,18 +195,7 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
 
       final int campaignId = await VolunteerCampaignDatabase.instance.insert(campaign);
 
-      // === Tambahkan notifikasi ke creator sendiri (revisi nomor 5) ===
-      await NotificationDatabase.instance.insertNotification(
-        NotificationItem(
-          user: widget.creator,
-          message: 'Campaign volunteer "${campaign.title}" telah diajukan dan menunggu review admin.',
-          date: DateTime.now(),
-          type: 'campaign_pending',
-          relatedId: campaignId.toString(),
-        ),
-      );
-
-      // Notifikasi ke admin tetap ada
+      // Notifikasi ke admin
       await NotificationDatabase.instance.insertNotification(
         NotificationItem(
           user: 'admin',
@@ -219,10 +206,20 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
         ),
       );
 
-      // === Tambahan: Push notification ke admin ===
-      // Hanya munculkan di device admin (opsional: tambahkan pengecekan role jika diperlukan)
+      // Notifikasi ke creator sendiri
+      await NotificationDatabase.instance.insertNotification(
+        NotificationItem(
+          user: widget.creator,
+          message: 'Campaign volunteer "${campaign.title}" telah diajukan dan menunggu review admin.',
+          date: DateTime.now(),
+          type: 'campaign_pending',
+          relatedId: campaignId.toString(),
+        ),
+      );
+
+      // (Opsional) Push notification ke admin (jika device admin)
       await NotificationService.showNotification(
-        id: campaignId, // id unik, bisa pakai id campaign
+        id: campaignId,
         title: 'Pengajuan Campaign Baru',
         body: 'Campaign volunteer "${campaign.title}" diajukan oleh ${widget.creator}',
         payload: campaignId.toString(),

@@ -26,7 +26,7 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
   DateTime? _endDate;
   File? _imageFile;
 
-  String? _errorFeedback; // <-- untuk feedback error custom
+  String? _errorFeedback;
 
   Future<void> _pickAndCropImage() async {
     try {
@@ -39,7 +39,7 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
             AndroidUiSettings(
               toolbarTitle: 'Crop Gambar',
               hideBottomControls: true,
-              lockAspectRatio: true, // lock agar pasti 16:9
+              lockAspectRatio: true,
             ),
             IOSUiSettings(
               title: 'Crop Gambar',
@@ -115,7 +115,7 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
       status: "pending",
       creator: widget.creator,
     );
-    // Simpan dan dapatkan id campaign baru
+
     final int campaignId = await CampaignDatabase.instance.insertCampaign(campaign);
 
     // === Tambahkan notifikasi ke admin ===
@@ -137,7 +137,6 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
 
   Widget _buildImagePreview() {
     if (_imageFile != null) {
-      // Pastikan file memang ada
       if (_imageFile!.existsSync()) {
         return AspectRatio(
           aspectRatio: 16 / 9,

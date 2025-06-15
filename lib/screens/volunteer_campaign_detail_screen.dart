@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/volunteer_campaign.dart';
-import '../models/volunteer_applicant.dart';
-import '../db/volunteer_applicant_database.dart';
+import '../db/volunteer_registration_database.dart';
+import '../models/volunteer_registration.dart';
+import 'volunteer_registration_screen.dart'; // Import screen untuk pendaftaran volunteer
 import 'package:intl/intl.dart';
 
 class VolunteerCampaignDetailScreen extends StatefulWidget {
@@ -17,11 +18,8 @@ class _VolunteerCampaignDetailScreenState extends State<VolunteerCampaignDetailS
   bool _isJoining = false;
   bool _alreadyJoined = false;
 
-  // Ganti ini dengan user login sebenarnya
-  String currentUserId = "USER_ID_123"; // TODO: replace with actual user ID/username
-  String currentUserName = "Nama User"; // TODO: replace with actual user name
-  String currentUserEmail = "user@mail.com"; // TODO: replace with actual email
-  String currentUserPhone = "0812xxxxxxx"; // TODO: replace with actual phone
+  // TODO: Ganti dengan user login sebenarnya
+  String currentUsername = "USERNAME_LOGIN"; // Ubah dengan username user login
 
   @override
   void initState() {
@@ -30,41 +28,30 @@ class _VolunteerCampaignDetailScreenState extends State<VolunteerCampaignDetailS
   }
 
   Future<void> _checkAlreadyJoined() async {
-    final applicant = await VolunteerApplicantDatabase.instance.getApplicant(widget.campaign.id!, currentUserId);
+    final regs = await VolunteerRegistrationDatabase.instance.getRegistrationsByUser(currentUsername);
     setState(() {
-      _alreadyJoined = applicant != null;
+      _alreadyJoined = regs.any((reg) => reg.campaignId == widget.campaign.id);
     });
   }
 
   Future<void> _handleJoin() async {
-    setState(() => _isJoining = true);
-    try {
-      final now = DateTime.now();
-      final applicant = VolunteerApplicant(
-        campaignId: widget.campaign.id!,
-        userId: currentUserId,
-        name: currentUserName,
-        email: currentUserEmail,
-        phone: currentUserPhone,
-        appliedAt: now,
-        status: 'pending',
-      );
-      await VolunteerApplicantDatabase.instance.insertApplicant(applicant);
-
-      if (mounted) {
-        setState(() {
-          _alreadyJoined = true;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Berhasil mendaftar volunteer!")),
-        );
-      }
-    } catch (e) {
+    // Arahkan ke halaman form pendaftaran volunteer
+    final res = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => VolunteerRegistrationScreen(
+          campaignId: widget.campaign.id!,
+          username: currentUsername,
+        ),
+      ),
+    );
+    if (res == true) {
+      setState(() {
+        _alreadyJoined = true;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal mendaftar volunteer: $e")),
+        const SnackBar(content: Text('Berhasil mendaftar volunteer!')),
       );
-    } finally {
-      if (mounted) setState(() => _isJoining = false);
     }
   }
 
