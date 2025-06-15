@@ -208,9 +208,27 @@ class CampaignDatabase {
 
   // === DONATION ===
 
+  /// Update collectedFund pada campaign setelah donasi baru
+  Future<void> updateCollectedFund(int campaignId) async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT SUM(amount) as total FROM donations WHERE campaignId = ?',
+      [campaignId],
+    );
+    final total = result.first['total'] ?? 0;
+    await db.update(
+      'campaigns',
+      {'collectedFund': total},
+      where: 'id = ?',
+      whereArgs: [campaignId],
+    );
+  }
+
   Future<int> insertDonation(Donation donation) async {
     final db = await instance.database;
-    return await db.insert('donations', donation.toMap());
+    final id = await db.insert('donations', donation.toMap());
+    await updateCollectedFund(donation.campaignId); // <-- update collectedFund
+    return id;
   }
 
   Future<List<Donation>> getDonationsByCampaign(int campaignId) async {
@@ -262,6 +280,7 @@ class CampaignDatabase {
     await db.delete('doas');
     await db.delete('campaigns');
   }
+
   Future<List<Campaign>> getActiveDonasiCampaigns() async {
     final db = await instance.database;
     final nowIso = DateTime.now().toIso8601String();

@@ -44,7 +44,7 @@ class Campaign {
       title: map['title'],
       description: map['description'],
       targetFund: map['targetFund'],
-      collectedFund: map['collectedFund'],
+      collectedFund: map['collectedFund'] ?? 0,
       endDate: map['endDate'],
       imagePath: map['imagePath'],
       status: map['status'] ?? 'pending',

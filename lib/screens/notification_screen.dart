@@ -109,12 +109,31 @@ class _NotificationScreenState extends State<NotificationScreen> {
         }
       }
     } else if (notif.type == 'campaign_pending') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AdminCampaignApprovalScreen(),
-        ),
-      );
+      if (widget.username == 'admin') {
+        // Admin: ke halaman approval
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminCampaignApprovalScreen(),
+          ),
+        );
+      } else {
+        // Creator: ke detail campaign sendiri jika ada, fallback ke "Campaign Saya"
+        final campaignId = int.tryParse(notif.relatedId ?? '');
+        if (campaignId != null) {
+          final campaign = await CampaignDatabase.instance.getCampaignById(campaignId);
+          if (campaign != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MyCampaignDetailScreen(campaign: campaign),
+              ),
+            );
+            return;
+          }
+        }
+        Navigator.pushNamed(context, '/my_campaigns');
+      }
     } else if (notif.type == 'campaign_approved' || notif.type == 'campaign_rejected') {
       final campaignId = int.tryParse(notif.relatedId ?? '');
       if (campaignId != null) {

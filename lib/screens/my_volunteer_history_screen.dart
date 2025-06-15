@@ -38,14 +38,30 @@ class _MyVolunteerHistoryScreenState extends State<MyVolunteerHistoryScreen> {
   Widget _buildStatusChip(String status) {
     switch (status) {
       case "approved":
-        return const Chip(label: Text("Disetujui"), backgroundColor: Colors.green);
+        return Chip(
+          label: Text("Disetujui"),
+          backgroundColor: Colors.green[100],
+          labelStyle: TextStyle(color: Colors.green[900]),
+        );
       case "pending":
-        return const Chip(label: Text("Menunggu"), backgroundColor: Colors.orange);
+        return Chip(
+          label: Text("Menunggu"),
+          backgroundColor: Colors.orange[100],
+          labelStyle: TextStyle(color: Colors.orange[900]),
+        );
       case "rejected":
-        return const Chip(label: Text("Ditolak"), backgroundColor: Colors.red);
+        return Chip(
+          label: Text("Ditolak"),
+          backgroundColor: Colors.red[100],
+          labelStyle: TextStyle(color: Colors.red[900]),
+        );
       default:
         return Chip(label: Text(status));
     }
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
   }
 
   @override
@@ -74,7 +90,9 @@ class _MyVolunteerHistoryScreenState extends State<MyVolunteerHistoryScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Tanggal Daftar: ${reg.registeredAt.day.toString().padLeft(2, '0')}/${reg.registeredAt.month.toString().padLeft(2, '0')}/${reg.registeredAt.year}'),
+                      Text('Tanggal Daftar: ${_formatDate(reg.registeredAt)}'),
+                      if (campaign?.eventDate != null)
+                        Text('Tanggal Event: ${_formatDate(campaign!.eventDate)}'),
                       _buildStatusChip(reg.status),
                       if (reg.status == "rejected" && reg.adminFeedback != null && reg.adminFeedback!.trim().isNotEmpty)
                         Padding(
@@ -101,6 +119,7 @@ class _MyVolunteerHistoryScreenState extends State<MyVolunteerHistoryScreen> {
                             MaterialPageRoute(
                               builder: (_) => VolunteerCampaignDetailScreen(
                                 campaign: campaign,
+                                currentUsername: widget.username,
                                 // Tambahkan parameter lain jika diperlukan
                               ),
                             ),

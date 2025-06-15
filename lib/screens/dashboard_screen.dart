@@ -14,8 +14,11 @@ import '../models/volunteer_campaign.dart';
 import '../db/volunteer_campaign_database.dart';
 import 'campaign_detail_screen.dart';
 import 'volunteer_campaign_detail_screen.dart';
-// import 'volunteer_screen.dart'; // Sudah tidak dipakai di nav bar
 import '../services/reminder_service.dart';
+
+// Tambahan: untuk ambil data user dan avatar
+import '../db/user_database.dart';
+import '../models/user.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -30,11 +33,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   final GlobalKey<EmergencyBantooSectionState> _emergencyKey = GlobalKey();
 
+  String? _avatarPath;
+  bool _isUserLoading = true;
+
   final List<Map<String, dynamic>> _navItems = [
     {"icon": Icons.home, "label": "Home"},
     {"icon": Icons.notifications, "label": "Notification"},
     {"icon": Icons.person, "label": "Profile"},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await UserDatabase.instance.getUserByUsername(widget.username);
+    setState(() {
+      _avatarPath = user?.avatarAsset;
+      _isUserLoading = false;
+    });
+  }
 
   String get _appBarTitle {
     if (_selectedIndex == 2) return "Profile";
@@ -86,6 +106,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // For auto-refresh avatar after returning from profile
+  void _reloadUserAvatarIfNeeded() async {
+    await _loadUser();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,11 +131,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (_selectedIndex != 2)
             Padding(
               padding: const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
-              child: CircleAvatar(
-                radius: 22,
-                backgroundColor: Colors.white,
-                child: Image.asset('assets/dashboard_avatar.png', width: 32),
-              ),
+              child: _isUserLoading
+                  ? CircleAvatar(radius: 22, backgroundColor: Colors.white)
+                  : CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Colors.white,
+                      backgroundImage: (_avatarPath != null &&
+                              _avatarPath!.isNotEmpty &&
+                              !_avatarPath!.contains('assets'))
+                          ? FileImage(File(_avatarPath!))
+                          : AssetImage('assets/dashboard_avatar.png')
+                              as ImageProvider,
+                    ),
             ),
         ],
       ),
@@ -126,11 +158,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   )
                 : _selectedIndex == 1
                     ? NotificationScreen(username: widget.username)
+                    // REVISI: reload avatar setelah profile screen (misal user ganti foto)
                     : ProfileScreen(
                         username: widget.username,
                         email: '',
                         role: widget.role,
-                        avatarAsset: "assets/images/default_avatar.png",
+                        avatarAsset: _avatarPath ?? "assets/images/default_avatar.png",
                       ),
           ),
         ],
@@ -142,7 +175,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         unselectedItemColor: Colors.white,
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) {
+        onTap: (index) async {
+          // Jika keluar dari profile tab, reload avatar (biar update setelah ganti foto)
+          if (_selectedIndex == 2 && index != 2) {
+            await _loadUser();
+          }
           setState(() {
             _selectedIndex = index;
           });
@@ -193,11 +230,13 @@ class __DashboardHomeState extends State<_DashboardHome> {
   @override
   void initState() {
     super.initState();
+    _refreshCampaigns();
+    ReminderService.sendVolunteerReminders(widget.username);
+  }
+
+  void _refreshCampaigns() {
     _donasiApprovedFuture = CampaignDatabase.instance.getActiveDonasiCampaigns();
     _volunteerApprovedFuture = VolunteerCampaignDatabase.instance.getActiveOprecVolunteerCampaigns();
-
-    // PANGGIL REMINDER DI SINI (agar tiap user login/dash, volunteer dapat notifikasi event besok)
-    ReminderService.sendVolunteerReminders(widget.username);
   }
 
   Widget _pendingCampaignSection(BuildContext context) {
@@ -259,7 +298,7 @@ class __DashboardHomeState extends State<_DashboardHome> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset('assets/logo_bantoo.png', height: 48),                  
+                  Image.asset('assets/logo_bantoo.png', height: 48),
                   SizedBox(height: 10),
                   Text(
                     "Welcome To Bantoo!",
@@ -332,13 +371,19 @@ class __DashboardHomeState extends State<_DashboardHome> {
                     final c = list[idx];
                     return BantooCampaignCard(
                       campaign: c,
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        // REVISI: Tunggu hasil dari detail, lalu refresh dashboard jika donasi terjadi
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => CampaignDetailScreen(campaign: c),
                           ),
                         );
+                        if (result == true) {
+                          setState(() {
+                            _refreshCampaigns();
+                          });
+                        }
                       },
                     );
                   },
@@ -383,7 +428,10 @@ class __DashboardHomeState extends State<_DashboardHome> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => VolunteerCampaignDetailScreen(campaign: v),
+                            builder: (_) => VolunteerCampaignDetailScreen(
+                              campaign: v,
+                              currentUsername: widget.username,
+                            ),
                           ),
                         );
                       },
@@ -405,7 +453,7 @@ class __DashboardHomeState extends State<_DashboardHome> {
                 SizedBox(height: 12),
                 GestureDetector(
                   onTap: () => widget.showCampaignSelectionDialog(context),
-                  child: BantooCampaignCard(onTap: () => widget.showCampaignSelectionDialog(context)),
+                  child: BantooCampaignCard(campaign: null, onTap: () => widget.showCampaignSelectionDialog(context)),
                 ),
               ],
             ),

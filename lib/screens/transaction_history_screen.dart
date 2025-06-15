@@ -67,13 +67,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       if (donSnap.hasData) {
                         totalTerkumpul = donSnap.data!.fold<int>(0, (sum, d) => sum + d.amount);
                       }
-                      final percent = (c.targetFund == 0)
+                      // Perhitungan progress
+                      double percentRaw = (c.targetFund == 0)
                           ? 0.0
-                          : (totalTerkumpul / c.targetFund).clamp(0.0, 1.0);
+                          : (totalTerkumpul / c.targetFund);
+                      double percentBar = percentRaw.clamp(0.0, 1.0);
+
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         child: ListTile(
-                          // Tampilkan "Orang Baik" jika anonim
                           title: Text(
                             d.isAnonim ? "Orang Baik" : d.name,
                             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -87,27 +89,32 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               Text('Tanggal: ${d.time}'),
                               Text('Metode: ${d.paymentMethod}'),
                               const SizedBox(height: 8),
-                              LinearProgressIndicator(
-                                value: percent,
-                                backgroundColor: Colors.grey[300],
-                                color: Colors.blue,
-                                minHeight: 7,
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              // Progress bar dan info, revisi agar tidak overflow
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  LinearProgressIndicator(
+                                    value: percentBar,
+                                    backgroundColor: Colors.grey[300],
+                                    color: Colors.blue,
+                                    minHeight: 7,
+                                  ),
+                                  const SizedBox(height: 4),
                                   Text(
-                                    "Progress: ${(percent * 100).toStringAsFixed(1)}%",
+                                    "Progress: ${(percentRaw * 100).toStringAsFixed(1)}%",
                                     style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                                   ),
                                   Text(
                                     "Terkumpul: Rp${formatRupiah(totalTerkumpul)}",
                                     style: const TextStyle(fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                   Text(
                                     "Target: Rp${formatRupiah(c.targetFund)}",
                                     style: const TextStyle(fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                 ],
                               ),

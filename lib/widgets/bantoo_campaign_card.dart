@@ -2,9 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/campaign.dart';
 
-/// Card utama untuk donasi campaign (dipakai di Emergency Bantoo section)
-/// - Jika [campaign] diisi: tampilkan summary campaign
-/// - Jika [campaign] null: tampilkan card "Ask For New Campaign"/Buat Campaign
 class BantooCampaignCard extends StatelessWidget {
   final Campaign? campaign;
   final VoidCallback? onTap;
@@ -171,7 +168,10 @@ class BantooCampaignCard extends StatelessWidget {
       );
     }
 
-    // Show campaign summary card (untuk Emergency Bantoo section)
+    final double progress = (campaign!.targetFund > 0)
+        ? (campaign!.collectedFund / campaign!.targetFund).clamp(0.0, 1.0)
+        : 0.0;
+
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: onTap,
@@ -190,6 +190,7 @@ class BantooCampaignCard extends StatelessWidget {
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (campaign!.imagePath.isNotEmpty && File(campaign!.imagePath).existsSync())
@@ -198,60 +199,79 @@ class BantooCampaignCard extends StatelessWidget {
                 child: Image.file(
                   File(campaign!.imagePath),
                   height: 110,
-                  width: 220,
+                  width: double.infinity,
                   fit: BoxFit.cover,
                 ),
               )
             else
               Container(
                 height: 110,
-                width: 220,
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
                 ),
                 alignment: Alignment.center,
-                child: Icon(Icons.image, size: 48, color: Colors.grey[500]),
+                child: Icon(Icons.image, size: 42, color: Colors.grey[500]),
               ),
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.fromLTRB(10, 7, 10, 7), // padding bawah minimal
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Nama pengaju
+                  Text(
+                    campaign!.creator,
+                    style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: 10,
+                      color: Colors.grey[700],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 1),
+                  // Judul campaign
                   Text(
                     campaign!.title,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.black87,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 6),
-                  Text(
-                    campaign!.description,
-                    style: TextStyle(fontSize: 13, color: Colors.black87),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "Target: Rp${campaign!.targetFund}",
-                    style: TextStyle(fontSize: 12, color: Colors.blueGrey[700]),
-                  ),
-                  Text(
-                    "Sisa waktu: ${campaign!.endDate}",
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: onTap,
-                      child: Text("Donasi Sekarang"),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.blue[900],
-                        side: BorderSide(color: Colors.blue[800]!),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: EdgeInsets.symmetric(vertical: 8),
+                  SizedBox(height: 5),
+                  // Progres bar & nominal
+                  Row(
+                    children: [
+                      Text(
+                        "Terkumpul ",
+                        style: TextStyle(fontSize: 10, color: Colors.grey[700]),
                       ),
+                      Flexible(
+                        child: Text(
+                          "Rp${campaign!.collectedFund.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => '.')}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: Colors.blue[700],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      minHeight: 6,
+                      value: progress,
+                      backgroundColor: Colors.blue[50],
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.lightBlueAccent),
                     ),
                   ),
                 ],

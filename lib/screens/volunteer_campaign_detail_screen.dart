@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 import '../models/volunteer_campaign.dart';
 import '../db/volunteer_registration_database.dart';
 import '../models/volunteer_registration.dart';
-import 'volunteer_registration_screen.dart'; // Import screen untuk pendaftaran volunteer
+import 'volunteer_registration_screen.dart';
 import 'package:intl/intl.dart';
 
 class VolunteerCampaignDetailScreen extends StatefulWidget {
   final VolunteerCampaign campaign;
-  const VolunteerCampaignDetailScreen({Key? key, required this.campaign}) : super(key: key);
+  final String currentUsername; // Wajib: username user login
+
+  const VolunteerCampaignDetailScreen({
+    Key? key,
+    required this.campaign,
+    required this.currentUsername,
+  }) : super(key: key);
 
   @override
   State<VolunteerCampaignDetailScreen> createState() => _VolunteerCampaignDetailScreenState();
@@ -18,9 +24,6 @@ class _VolunteerCampaignDetailScreenState extends State<VolunteerCampaignDetailS
   bool _isJoining = false;
   bool _alreadyJoined = false;
 
-  // TODO: Ganti dengan user login sebenarnya
-  String currentUsername = "USERNAME_LOGIN"; // Ubah dengan username user login
-
   @override
   void initState() {
     super.initState();
@@ -28,30 +31,37 @@ class _VolunteerCampaignDetailScreenState extends State<VolunteerCampaignDetailS
   }
 
   Future<void> _checkAlreadyJoined() async {
-    final regs = await VolunteerRegistrationDatabase.instance.getRegistrationsByUser(currentUsername);
+    final regs = await VolunteerRegistrationDatabase.instance.getRegistrationsByUser(widget.currentUsername);
     setState(() {
       _alreadyJoined = regs.any((reg) => reg.campaignId == widget.campaign.id);
     });
   }
 
   Future<void> _handleJoin() async {
-    // Arahkan ke halaman form pendaftaran volunteer
+    setState(() {
+      _isJoining = true;
+    });
     final res = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (ctx) => VolunteerRegistrationScreen(
           campaignId: widget.campaign.id!,
-          username: currentUsername,
+          username: widget.currentUsername,
         ),
       ),
     );
     if (res == true) {
       setState(() {
         _alreadyJoined = true;
+        _isJoining = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Berhasil mendaftar volunteer!')),
       );
+    } else {
+      setState(() {
+        _isJoining = false;
+      });
     }
   }
 

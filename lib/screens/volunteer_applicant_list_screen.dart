@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../db/volunteer_applicant_database.dart';
-import '../models/volunteer_applicant.dart';
+import '../db/volunteer_registration_database.dart';
+import '../models/volunteer_registration.dart';
 
 class VolunteerApplicantListScreen extends StatefulWidget {
   final int campaignId;
@@ -17,17 +17,17 @@ class VolunteerApplicantListScreen extends StatefulWidget {
 }
 
 class _VolunteerApplicantListScreenState extends State<VolunteerApplicantListScreen> {
-  late Future<List<VolunteerApplicant>> _applicantsFuture;
+  late Future<List<VolunteerRegistration>> _registrationsFuture;
 
   @override
   void initState() {
     super.initState();
-    _applicantsFuture = VolunteerApplicantDatabase.instance.getApplicantsByCampaign(widget.campaignId);
+    _registrationsFuture = VolunteerRegistrationDatabase.instance.getRegistrationsByCampaign(widget.campaignId);
   }
 
   Future<void> _refresh() async {
     setState(() {
-      _applicantsFuture = VolunteerApplicantDatabase.instance.getApplicantsByCampaign(widget.campaignId);
+      _registrationsFuture = VolunteerRegistrationDatabase.instance.getRegistrationsByCampaign(widget.campaignId);
     });
   }
 
@@ -61,24 +61,24 @@ class _VolunteerApplicantListScreenState extends State<VolunteerApplicantListScr
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
-        child: FutureBuilder<List<VolunteerApplicant>>(
-          future: _applicantsFuture,
+        child: FutureBuilder<List<VolunteerRegistration>>(
+          future: _registrationsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-            final applicants = snapshot.data ?? [];
-            if (applicants.isEmpty) {
+            final regs = snapshot.data ?? [];
+            if (regs.isEmpty) {
               return const Center(
                 child: Text("Belum ada pendaftar volunteer untuk campaign ini."),
               );
             }
             return ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: applicants.length,
+              itemCount: regs.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, i) {
-                final a = applicants[i];
+                final a = regs[i];
                 return Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -90,12 +90,17 @@ class _VolunteerApplicantListScreenState extends State<VolunteerApplicantListScr
                       children: [
                         Text("Email: ${a.email}"),
                         Text("No HP: ${a.phone}"),
-                        Text("Tanggal Daftar: ${a.appliedAt.day.toString().padLeft(2, '0')}/"
-                            "${a.appliedAt.month.toString().padLeft(2, '0')}/${a.appliedAt.year}"),
-                        if (a.note != null && a.note!.isNotEmpty)
+                        Text("Tanggal Daftar: ${a.registeredAt.day.toString().padLeft(2, '0')}/"
+                            "${a.registeredAt.month.toString().padLeft(2, '0')}/${a.registeredAt.year}"),
+                        if (a.experience.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
-                            child: Text("Catatan: ${a.note}", style: const TextStyle(fontStyle: FontStyle.italic)),
+                            child: Text("Pengalaman: ${a.experience}", style: const TextStyle(fontStyle: FontStyle.italic)),
+                          ),
+                        if (a.adminFeedback != null && a.adminFeedback!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text("Feedback Admin: ${a.adminFeedback}", style: const TextStyle(fontStyle: FontStyle.italic)),
                           ),
                       ],
                     ),

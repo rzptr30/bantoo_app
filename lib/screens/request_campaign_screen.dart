@@ -10,7 +10,7 @@ import '../db/volunteer_campaign_database.dart';
 import '../models/volunteer_campaign.dart';
 import '../db/notification_database.dart';
 import '../models/notification_item.dart';
-import '../services/notification_service.dart'; // Tambahan
+import '../services/notification_service.dart'; // Opsional, untuk push notification lokal
 
 class RequestCampaignScreen extends StatefulWidget {
   final String creator;
@@ -195,11 +195,11 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
 
       final int campaignId = await VolunteerCampaignDatabase.instance.insert(campaign);
 
-      // Notifikasi ke admin
+      // === Notifikasi ke admin ===
       await NotificationDatabase.instance.insertNotification(
         NotificationItem(
           user: 'admin',
-          message: 'Campaign volunteer baru diajukan: "${campaign.title}" oleh ${widget.creator}',
+          message: '${widget.creator} telah mengajukan campaign volunteer "${campaign.title}"',
           date: DateTime.now(),
           type: 'campaign_pending',
           relatedId: campaignId.toString(),
@@ -218,12 +218,14 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
       );
 
       // (Opsional) Push notification ke admin (jika device admin)
-      await NotificationService.showNotification(
-        id: campaignId,
-        title: 'Pengajuan Campaign Baru',
-        body: 'Campaign volunteer "${campaign.title}" diajukan oleh ${widget.creator}',
-        payload: campaignId.toString(),
-      );
+      try {
+        await NotificationService.showNotification(
+          id: campaignId,
+          title: 'Pengajuan Campaign Baru',
+          body: 'Campaign volunteer "${campaign.title}" diajukan oleh ${widget.creator}',
+          payload: campaignId.toString(),
+        );
+      } catch (_) {}
 
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(this.context).showSnackBar(

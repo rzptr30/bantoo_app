@@ -118,11 +118,22 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
 
     final int campaignId = await CampaignDatabase.instance.insertCampaign(campaign);
 
-    // === Tambahkan notifikasi ke admin ===
+    // === Notifikasi ke admin ===
     await NotificationDatabase.instance.insertNotification(
       NotificationItem(
         user: 'admin',
-        message: 'Campaign donasi baru diajukan: "${campaign.title}" oleh ${widget.creator}',
+        message: '${widget.creator} telah mengajukan campaign donasi "${campaign.title}"',
+        date: DateTime.now(),
+        type: 'campaign_pending',
+        relatedId: campaignId.toString(),
+      ),
+    );
+
+    // === Notifikasi ke user yang mengajukan (creator) ===
+    await NotificationDatabase.instance.insertNotification(
+      NotificationItem(
+        user: widget.creator,
+        message: 'Pengajuan campaign donasi "${campaign.title}" berhasil. Menunggu ACC admin.',
         date: DateTime.now(),
         type: 'campaign_pending',
         relatedId: campaignId.toString(),
