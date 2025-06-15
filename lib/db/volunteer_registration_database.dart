@@ -7,7 +7,17 @@ class VolunteerRegistrationDatabase {
   static Database? _database;
 
   VolunteerRegistrationDatabase._init();
+// Tambahkan pada class VolunteerRegistrationDatabase
 
+Future<List<VolunteerRegistration>> getParticipantsForCampaign(int campaignId) async {
+  final db = await instance.database;
+  final result = await db.query(
+    'volunteer_registrations',
+    where: 'campaignId = ?',
+    whereArgs: [campaignId],
+  );
+  return result.map((map) => VolunteerRegistration.fromMap(map)).toList();
+}
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('volunteer_registrations.db');

@@ -7,7 +7,23 @@ class NotificationDatabase {
   static Database? _database;
 
   NotificationDatabase._init();
-
+Future<NotificationItem?> getNotificationByTypeAndRelatedId({
+  required String user,
+  required String type,
+  required String relatedId,
+}) async {
+  final db = await instance.database;
+  final result = await db.query(
+    'notifications',
+    where: 'user = ? AND type = ? AND relatedId = ?',
+    whereArgs: [user, type, relatedId],
+    limit: 1,
+  );
+  if (result.isNotEmpty) {
+    return NotificationItem.fromMap(result.first);
+  }
+  return null;
+}
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('notifications.db');

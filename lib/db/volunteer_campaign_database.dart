@@ -5,7 +5,19 @@ import '../models/volunteer_campaign.dart';
 class VolunteerCampaignDatabase {
   static final VolunteerCampaignDatabase instance = VolunteerCampaignDatabase._init();
   static Database? _database;
+// Tambahkan pada class VolunteerCampaignDatabase
 
+Future<List<VolunteerCampaign>> getCampaignsByEventDate(DateTime date) async {
+  final db = await instance.database;
+  // Event date di DB biasanya string ISO, jadi samakan formatnya (YYYY-MM-DD)
+  final String dateOnly = date.toIso8601String().substring(0, 10);
+  final result = await db.query(
+    'volunteer_campaigns',
+    where: "eventDate LIKE ? AND status = ?",
+    whereArgs: ['$dateOnly%', 'approved'],
+  );
+  return result.map((map) => VolunteerCampaign.fromMap(map)).toList();
+}
   VolunteerCampaignDatabase._init();
 
   Future<Database> get database async {

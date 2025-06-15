@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../db/notification_database.dart';
 import '../models/notification_item.dart';
@@ -19,6 +20,18 @@ class NotificationScreen extends StatefulWidget {
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+// Fungsi untuk format waktu relatif
+String timeAgo(DateTime date) {
+  final now = DateTime.now();
+  final diff = now.difference(date);
+
+  if (diff.inSeconds < 60) return 'Baru saja';
+  if (diff.inMinutes < 60) return '${diff.inMinutes} menit yang lalu';
+  if (diff.inHours < 24) return '${diff.inHours} jam yang lalu';
+  if (diff.inDays < 7) return '${diff.inDays} hari yang lalu';
+  return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
@@ -55,7 +68,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _onNotifTap(BuildContext context, NotificationItem notif) async {
-    // ... (isi sama seperti sebelumnya, tidak perlu diubah)
     if (notif.type == 'donation_new' || notif.type == 'volunteer_approved') {
       final campaignId = int.tryParse(notif.relatedId ?? '');
       if (campaignId != null) {
@@ -172,6 +184,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
+  // Helper widget untuk status badge
+  Widget _statusBadge(String? status) {
+    if (status == null) return SizedBox.shrink();
+    String label = status.toUpperCase();
+    Color color = Colors.orange;
+    if (status == "approved") color = Colors.green;
+    if (status == "rejected") color = Colors.red;
+    return Chip(
+      label: Text(label, style: TextStyle(color: color)),
+      backgroundColor: color.withOpacity(0.15),
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -187,16 +214,63 @@ class _NotificationScreenState extends State<NotificationScreen> {
         separatorBuilder: (context, index) => Divider(height: 1),
         itemBuilder: (context, i) {
           final n = _notifs[i];
+          // Cek notifikasi yang terkait campaign volunteer
+          final isVolunteerCampaignNotif = n.type == 'campaign_approved' ||
+              n.type == 'campaign_rejected' ||
+              n.type == 'volunteer_new';
+          final campaignId = int.tryParse(n.relatedId ?? '');
+          if (isVolunteerCampaignNotif && campaignId != null) {
+            return FutureBuilder<VolunteerCampaign?>(
+              future: VolunteerCampaignDatabase.instance.getCampaignById(campaignId),
+              builder: (context, snap) {
+                if (snap.connectionState != ConnectionState.done) {
+                  return ListTile(
+                    leading: Icon(_iconForType(n.type ?? ''), color: _iconColorForType(n.type ?? '')),
+                    title: Text(n.message),
+                    subtitle: Text(timeAgo(n.date)),
+                    onTap: () => _onNotifTap(context, n),
+                  );
+                }
+                final campaign = snap.data;
+                return ListTile(
+                  leading: (campaign != null && campaign.imagePath != null && campaign.imagePath!.isNotEmpty)
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            File(campaign.imagePath!),
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stack) =>
+                                Icon(_iconForType(n.type ?? ''), color: _iconColorForType(n.type ?? '')),
+                          ),
+                        )
+                      : Icon(_iconForType(n.type ?? ''), color: _iconColorForType(n.type ?? '')),
+                  title: Text(n.message),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(timeAgo(n.date)),
+                      if (campaign != null && campaign.status != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: _statusBadge(campaign.status),
+                        ),
+                    ],
+                  ),
+                  onTap: () => _onNotifTap(context, n),
+                );
+              },
+            );
+          }
+          // Notifikasi lain (default)
           return ListTile(
             leading: Icon(
               _iconForType(n.type ?? ''),
               color: _iconColorForType(n.type ?? ''),
             ),
             title: Text(n.message),
-            subtitle: Text('${n.date.day.toString().padLeft(2, '0')}/'
-                '${n.date.month.toString().padLeft(2, '0')}/'
-                '${n.date.year} ${n.date.hour.toString().padLeft(2, '0')}:'
-                '${n.date.minute.toString().padLeft(2, '0')}'),
+            subtitle: Text(timeAgo(n.date)),
             onTap: () => _onNotifTap(context, n),
           );
         },

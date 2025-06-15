@@ -15,6 +15,8 @@ import '../db/volunteer_campaign_database.dart';
 import 'campaign_detail_screen.dart';
 import 'volunteer_campaign_detail_screen.dart';
 import 'volunteer_screen.dart';
+// Tambahkan import berikut:
+import '../services/reminder_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String username;
@@ -197,6 +199,9 @@ class __DashboardHomeState extends State<_DashboardHome> {
     super.initState();
     _donasiApprovedFuture = CampaignDatabase.instance.getActiveDonasiCampaigns();
     _volunteerApprovedFuture = VolunteerCampaignDatabase.instance.getActiveOprecVolunteerCampaigns();
+
+    // PANGGIL REMINDER DI SINI (agar tiap user login/dash, volunteer dapat notifikasi event besok)
+    ReminderService.sendVolunteerReminders(widget.username);
   }
 
   Widget _pendingCampaignSection(BuildContext context) {
