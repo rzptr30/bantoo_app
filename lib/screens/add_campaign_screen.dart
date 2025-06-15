@@ -26,6 +26,8 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
   DateTime? _endDate;
   File? _imageFile;
 
+  String? _errorFeedback; // <-- untuk feedback error custom
+
   Future<void> _pickAndCropImage() async {
     try {
       final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -78,7 +80,30 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
   }
 
   Future<void> _saveCampaign() async {
-    if (!_formKey.currentState!.validate() || _imageFile == null || _endDate == null) return;
+    setState(() {
+      _errorFeedback = null;
+    });
+
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_imageFile == null) {
+      setState(() {
+        _errorFeedback = "Silakan pilih gambar terlebih dahulu!";
+      });
+      ScaffoldMessenger.of(this.context).showSnackBar(
+        SnackBar(content: Text('Silakan pilih gambar terlebih dahulu!')),
+      );
+      return;
+    }
+    if (_endDate == null) {
+      setState(() {
+        _errorFeedback = "Silakan pilih tanggal selesai terlebih dahulu!";
+      });
+      ScaffoldMessenger.of(this.context).showSnackBar(
+        SnackBar(content: Text('Silakan pilih tanggal selesai terlebih dahulu!')),
+      );
+      return;
+    }
 
     final campaign = Campaign(
       title: _titleController.text,
@@ -127,6 +152,19 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
     } else {
       return Text("Belum ada gambar");
     }
+  }
+
+  Widget _buildErrorFeedback() {
+    if (_errorFeedback != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10.0),
+        child: Text(
+          _errorFeedback!,
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+    return SizedBox.shrink();
   }
 
   @override
@@ -184,6 +222,7 @@ class _AddCampaignScreenState extends State<AddCampaignScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              _buildErrorFeedback(),
               ElevatedButton(
                 onPressed: _saveCampaign,
                 child: Text("Ajukan Campaign"),

@@ -10,6 +10,7 @@ import '../db/volunteer_campaign_database.dart';
 import '../models/volunteer_campaign.dart';
 import '../db/notification_database.dart';
 import '../models/notification_item.dart';
+import '../services/notification_service.dart'; // Tambahan
 
 class RequestCampaignScreen extends StatefulWidget {
   final String creator;
@@ -216,6 +217,15 @@ class _RequestCampaignScreenState extends State<RequestCampaignScreen> {
           type: 'campaign_pending',
           relatedId: campaignId.toString(),
         ),
+      );
+
+      // === Tambahan: Push notification ke admin ===
+      // Hanya munculkan di device admin (opsional: tambahkan pengecekan role jika diperlukan)
+      await NotificationService.showNotification(
+        id: campaignId, // id unik, bisa pakai id campaign
+        title: 'Pengajuan Campaign Baru',
+        body: 'Campaign volunteer "${campaign.title}" diajukan oleh ${widget.creator}',
+        payload: campaignId.toString(),
       );
 
       setState(() => _isSubmitting = false);

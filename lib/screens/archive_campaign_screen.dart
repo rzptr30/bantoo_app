@@ -155,7 +155,7 @@ class _ArchiveCampaignScreenState extends State<ArchiveCampaignScreen> with Sing
                             MaterialPageRoute(
                               builder: (_) => MyVolunteerCampaignDetailScreen(
                                 campaign: c,
-                                currentUsername: '', // admin POV
+                                currentUsername: 'admin', // admin POV, agar admin bisa akses daftar pendaftar
                               ),
                             ),
                           );
